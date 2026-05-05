@@ -52,7 +52,8 @@ class FirebaseService {
   }
 
   Future<DocumentReference<Map<String, dynamic>>> createEvent(
-      Map<String, dynamic> data) {
+    Map<String, dynamic> data,
+  ) {
     return _fs.collection('events').add(data);
   }
 

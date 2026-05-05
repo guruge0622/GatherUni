@@ -73,8 +73,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   border: Border.all(color: const Color(0xFFE6ECF6)),
                 ),
                 child: TextButton(
-                  onPressed: () {
-                    // TODO: implement logout
+                  onPressed: () async {
+                    await FirebaseService.instance.signOut();
+                    if (!mounted) return;
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/login', (r) => false);
                   },
                   style: TextButton.styleFrom(
                     alignment: Alignment.centerLeft,

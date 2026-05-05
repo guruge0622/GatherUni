@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../src/shared.dart';
+import '../src/backend/firebase_service.dart';
 
 final _emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
 
@@ -35,6 +37,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     // UI-only: simulate successful sign in
     if (mounted) Navigator.of(context).pushReplacementNamed('/main');
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      await FirebaseService.instance.signInWithGoogle();
+      if (mounted) Navigator.of(context).pushReplacementNamed('/main');
+    } catch (e) {
+      _showError('Google sign-in failed: ${e.toString()}');
+    }
   }
 
   void _showError(String message) {
@@ -110,7 +121,93 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 12),
         ElevatedButton(onPressed: _submit, child: const Text('Sign in')),
         const SizedBox(height: 22),
-        const SocialSignInRow(),
+        Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: AppColors.inputBorder.withValues(alpha: .45),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'Sign in with',
+                    style: TextStyle(color: AppColors.mutedText, fontSize: 12),
+                  ),
+                ),
+                Expanded(
+                  child: Divider(
+                    color: AppColors.inputBorder.withValues(alpha: .45),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.softBlue),
+                    ),
+                    child: SvgPicture.asset(
+                      'assets/icons/facebook.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.softBlue),
+                    ),
+                    child: SvgPicture.asset(
+                      'assets/icons/instagram.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                GestureDetector(
+                  onTap: _signInWithGoogle,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.softBlue),
+                    ),
+                    child: SvgPicture.asset(
+                      'assets/icons/google.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
         const SizedBox(height: 18),
         AuthSwitch(
           text: "Don't have an account?",
