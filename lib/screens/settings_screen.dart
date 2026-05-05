@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
 import '../src/ui/feedback.dart';
+import '../src/backend/firebase_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

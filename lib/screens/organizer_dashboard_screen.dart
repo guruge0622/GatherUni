@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../src/shared.dart';
+import '../src/ui/feedback.dart';
 // design_system not used here
 
 class OrganizerDashboardScreen extends StatefulWidget {
