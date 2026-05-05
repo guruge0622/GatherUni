@@ -54,13 +54,17 @@ class EventPreviewScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: () async {
-                      final scaffold = ScaffoldMessenger.of(context);
-                      final nav = Navigator.of(context);
-                      await addUserEvent(event);
-                      scaffold.showSnackBar(
-                        const SnackBar(content: Text('Event published')),
-                      );
-                      nav.pushNamed('/organizer/dashboard');
+                      try {
+                        UIFeedback.showLoading(context, message: 'Publishing...');
+                        await addUserEvent(event);
+                        UIFeedback.hideLoading(context);
+                        if (!mounted) return;
+                        UIFeedback.showSnack(context, 'Event published');
+                        Navigator.of(context).pushNamed('/organizer/dashboard');
+                      } catch (e) {
+                        UIFeedback.hideLoading(context);
+                        UIFeedback.showSnack(context, 'Publish failed: ${e.toString()}', success: false);
+                      }
                     },
                     child: const Text('Confirm & Publish'),
                   ),

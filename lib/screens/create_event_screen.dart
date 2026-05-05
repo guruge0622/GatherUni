@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../src/shared.dart';
+import '../src/ui/feedback.dart';
 import '../src/theme/design_system.dart';
 
 class CreateEventScreen extends StatefulWidget {
@@ -91,17 +92,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           : localProfile.value.organizationName,
     );
 
-    if (_editing != null) {
-      await editUserEvent(id, e);
-    } else {
-      await addUserEvent(e);
+    try {
+      UIFeedback.showLoading(context, message: 'Saving draft...');
+      if (_editing != null) {
+        await editUserEvent(id, e);
+      } else {
+        await addUserEvent(e);
+      }
+      UIFeedback.hideLoading(context);
+      if (!mounted) return;
+      UIFeedback.showSnack(context, 'Draft saved');
+      Navigator.of(context).pushNamed('/organizer/dashboard');
+    } catch (err) {
+      UIFeedback.hideLoading(context);
+      if (!mounted) return;
+      UIFeedback.showSnack(context, 'Failed to save draft: ${err.toString()}', success: false);
     }
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Draft saved')));
-    Navigator.of(context).pushNamed('/organizer/dashboard');
   }
 
   Future<void> _publish() async {
@@ -123,17 +129,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           : localProfile.value.organizationName,
     );
 
-    if (_editing != null) {
-      await editUserEvent(id, e);
-    } else {
-      await addUserEvent(e);
+    try {
+      UIFeedback.showLoading(context, message: 'Publishing event...');
+      if (_editing != null) {
+        await editUserEvent(id, e);
+      } else {
+        await addUserEvent(e);
+      }
+      UIFeedback.hideLoading(context);
+      if (!mounted) return;
+      UIFeedback.showSnack(context, 'Event published');
+      Navigator.of(context).pushNamed('/organizer/dashboard');
+    } catch (err) {
+      UIFeedback.hideLoading(context);
+      if (!mounted) return;
+      UIFeedback.showSnack(context, 'Failed to publish: ${err.toString()}', success: false);
     }
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Event published')));
-    Navigator.of(context).pushNamed('/organizer/dashboard');
   }
 
   void _preview() {

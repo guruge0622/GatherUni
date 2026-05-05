@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
+import '../src/ui/feedback.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -72,13 +73,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: const Color(0xFFE6ECF6)),
                 ),
-                child: TextButton(
-                  onPressed: () async {
-                    await FirebaseService.instance.signOut();
-                    if (!mounted) return;
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/login', (r) => false);
+                        child: TextButton(
+                          onPressed: () async {
+                            try {
+                              UIFeedback.showLoading(context, message: 'Signing out...');
+                              await FirebaseService.instance.signOut();
+                              UIFeedback.hideLoading(context);
+                              if (!mounted) return;
+                              Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);
+                            } catch (e) {
+                              UIFeedback.hideLoading(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Sign out failed: ${e.toString()}')),
+                              );
+                            }
                   },
                   style: TextButton.styleFrom(
                     alignment: Alignment.centerLeft,

@@ -105,8 +105,15 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen>
             if (v == 'edit') {
               nav.pushNamed('/organizer/create', arguments: e);
             } else if (v == 'delete') {
-              await deleteUserEvent(e.id);
-              scaffold.showSnackBar(const SnackBar(content: Text('Deleted')));
+              try {
+                UIFeedback.showLoading(context, message: 'Deleting...');
+                await deleteUserEvent(e.id);
+                UIFeedback.hideLoading(context);
+                UIFeedback.showSnack(context, 'Deleted');
+              } catch (err) {
+                UIFeedback.hideLoading(context);
+                UIFeedback.showSnack(context, 'Delete failed: ${err.toString()}', success: false);
+              }
             }
           },
           itemBuilder: (_) => const [

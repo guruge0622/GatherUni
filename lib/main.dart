@@ -49,7 +49,9 @@ Future<void> main() async {
   FirebaseService.instance.authStateChanges().listen((user) async {
     if (user != null) {
       try {
-        final profileDoc = await FirebaseService.instance.getUserProfile(user.uid);
+        final profileDoc = await FirebaseService.instance.getUserProfile(
+          user.uid,
+        );
         if (profileDoc.exists && profileDoc.data() != null) {
           final data = profileDoc.data()!;
           updateLocalProfile(
@@ -68,20 +70,22 @@ Future<void> main() async {
             eventReminders: data['eventReminders'] as bool?,
             trendingEvents: data['trendingEvents'] as bool?,
             locationAccess: data['locationAccess'] as bool?,
-            interests: (data['interests'] as List<dynamic>?)?.map((e) => e as String).toList(),
+            interests: (data['interests'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList(),
           );
         }
 
         // subscribe to organizer events
         await _eventsSub?.cancel();
-        _eventsSub = FirebaseService.instance
-            .streamUserEvents(user.uid)
-            .listen((snap) {
-          final events = snap.docs
-              .map((d) => Event.fromMap({'id': d.id, ...d.data()}))
-              .toList();
-          userEvents.value = events;
-        });
+        _eventsSub = FirebaseService.instance.streamUserEvents(user.uid).listen(
+          (snap) {
+            final events = snap.docs
+                .map((d) => Event.fromMap({'id': d.id, ...d.data()}))
+                .toList();
+            userEvents.value = events;
+          },
+        );
       } catch (_) {
         // on error, keep local cache
       }

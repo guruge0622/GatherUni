@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../src/shared.dart';
 import '../src/backend/firebase_service.dart';
+import '../src/ui/feedback.dart';
 
 final _emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
 
@@ -41,9 +42,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signInWithGoogle() async {
     try {
+      UIFeedback.showLoading(context, message: 'Signing in...');
       await FirebaseService.instance.signInWithGoogle();
+      UIFeedback.hideLoading(context);
       if (mounted) Navigator.of(context).pushReplacementNamed('/main');
     } catch (e) {
+      UIFeedback.hideLoading(context);
       _showError('Google sign-in failed: ${e.toString()}');
     }
   }
