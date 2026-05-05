@@ -752,9 +752,31 @@ Future<void> addUserEvent(Event e) async {
 }
 
 Future<void> editUserEvent(String id, Event updated) async {
-  // If signed in and event has an id, update Firestore
+  // If signed in and event has an id, verify ownership then update Firestore
   final uid = FirebaseService.instance.currentUser?.uid;
   if (uid != null && updated.id.isNotEmpty) {
+    // find existing local event to check organizer
+    Event? existing;
+    for (final ev in userEvents.value) {
+      if (ev.id == id) {
+        existing = ev;
+        break;
+      }
+    }
+
+    final localOrganizerName = localProfile.value.organizationName.isEmpty
+        ? localProfile.value.fullName
+        : localProfile.value.organizationName;
+
+    if (existing != null) {
+      final organizerField = existing.organizer ?? '';
+      if (organizerField.isNotEmpty &&
+          organizerField != uid &&
+          organizerField != localOrganizerName) {
+        throw Exception('Not authorized to edit this event');
+      }
+    }
+
     try {
       await FirebaseService.instance.updateEvent(updated.id, updated.toMap());
     } catch (_) {}
@@ -767,7 +789,28 @@ Future<void> editUserEvent(String id, Event updated) async {
 
 Future<void> deleteUserEvent(String id) async {
   final uid = FirebaseService.instance.currentUser?.uid;
-  if (uid != null && id.isNotEmpty) {
+
+  // check ownership before remote delete
+  Event? existing;
+  for (final ev in userEvents.value) {
+    if (ev.id == id) {
+      existing = ev;
+      break;
+    }
+  }
+
+  final localOrganizerName = localProfile.value.organizationName.isEmpty
+      ? localProfile.value.fullName
+      : localProfile.value.organizationName;
+
+  if (uid != null && id.isNotEmpty && existing != null) {
+    final organizerField = existing.organizer ?? '';
+    if (organizerField.isNotEmpty &&
+        organizerField != uid &&
+        organizerField != localOrganizerName) {
+      throw Exception('Not authorized to delete this event');
+    }
+
     try {
       await FirebaseService.instance.deleteEvent(id);
     } catch (_) {}
