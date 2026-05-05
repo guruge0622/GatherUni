@@ -38,6 +38,11 @@ class FirebaseService {
     return _fs.collection('users').doc(uid).get();
   }
 
+  Future<Map<String, dynamic>?> fetchUserProfileMap(String uid) async {
+    final doc = await _fs.collection('users').doc(uid).get();
+    return doc.exists ? doc.data() : null;
+  }
+
   Future<void> setUserProfile(String uid, Map<String, dynamic> data) {
     return _fs.collection('users').doc(uid).set(data, SetOptions(merge: true));
   }
@@ -49,6 +54,15 @@ class FirebaseService {
         .where('organizerId', isEqualTo: uid)
         .orderBy('date', descending: true)
         .snapshots();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUserEventsOnce(String uid) async {
+    final snap = await _fs
+        .collection('events')
+        .where('organizerId', isEqualTo: uid)
+        .orderBy('date', descending: true)
+        .get();
+    return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
   }
 
   Future<DocumentReference<Map<String, dynamic>>> createEvent(

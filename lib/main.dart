@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'dart:async';
+import 'src/backend/firebase_service.dart';
 // Firebase backend
 import 'src/shared.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -37,8 +39,60 @@ const events = sampleEvents;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // start with local cache
   await loadLocalProfile();
   await loadUserEvents();
+
+  // Listen for auth changes and sync Firestore data
+  StreamSubscription? _eventsSub;
+  FirebaseService.instance.authStateChanges().listen((user) async {
+    if (user != null) {
+      try {
+        final profileDoc = await FirebaseService.instance.getUserProfile(user.uid);
+        if (profileDoc.exists && profileDoc.data() != null) {
+          final data = profileDoc.data()!;
+          updateLocalProfile(
+            fullName: data['fullName'] as String?,
+            email: data['email'] as String?,
+            role: data['role'] as String?,
+            university: data['university'] as String?,
+            faculty: data['faculty'] as String?,
+            degree: data['degree'] as String?,
+            academicYear: data['academicYear'] as String?,
+            intake: data['intake'] as String?,
+            photoPath: data['photoPath'] as String?,
+            organizationName: data['organizationName'] as String?,
+            organizationLogoPath: data['organizationLogoPath'] as String?,
+            contactInfo: data['contactInfo'] as String?,
+            eventReminders: data['eventReminders'] as bool?,
+            trendingEvents: data['trendingEvents'] as bool?,
+            locationAccess: data['locationAccess'] as bool?,
+            interests: (data['interests'] as List<dynamic>?)?.map((e) => e as String).toList(),
+          );
+        }
+
+        // subscribe to organizer events
+        await _eventsSub?.cancel();
+        _eventsSub = FirebaseService.instance
+            .streamUserEvents(user.uid)
+            .listen((snap) {
+          final events = snap.docs
+              .map((d) => Event.fromMap({'id': d.id, ...d.data()}))
+              .toList();
+          userEvents.value = events;
+        });
+      } catch (_) {
+        // on error, keep local cache
+      }
+    } else {
+      // signed out: cancel subscriptions and reload local cache
+      await _eventsSub?.cancel();
+      await loadLocalProfile();
+      await loadUserEvents();
+    }
+  });
+
   runApp(const GatherUniApp());
 }
 
