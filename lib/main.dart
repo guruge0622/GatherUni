@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-// Backend removed for UI-only mode
+import 'package:firebase_core/firebase_core.dart';
+// Firebase backend
 import 'src/shared.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'src/theme/design_system.dart';
@@ -35,6 +36,7 @@ const events = sampleEvents;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await loadLocalProfile();
   await loadUserEvents();
   runApp(const GatherUniApp());
