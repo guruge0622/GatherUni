@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:my_app/src/backend/firebase_service.dart';
 
 class AppColors {
   static const primaryBlue = Color(0xFF395886);
@@ -218,6 +219,32 @@ void updateLocalProfile({
     interests: interests,
   );
   saveLocalProfile();
+
+  // If authenticated, also persist profile to Firestore (merge)
+  try {
+    final uid = FirebaseService.instance.currentUser?.uid;
+    if (uid != null) {
+      final profileMap = {
+        'fullName': localProfile.value.fullName,
+        'email': localProfile.value.email,
+        'role': localProfile.value.role,
+        'university': localProfile.value.university,
+        'faculty': localProfile.value.faculty,
+        'degree': localProfile.value.degree,
+        'academicYear': localProfile.value.academicYear,
+        'intake': localProfile.value.intake,
+        'photoPath': localProfile.value.photoPath,
+        'organizationName': localProfile.value.organizationName,
+        'organizationLogoPath': localProfile.value.organizationLogoPath,
+        'contactInfo': localProfile.value.contactInfo,
+        'eventReminders': localProfile.value.eventReminders,
+        'trendingEvents': localProfile.value.trendingEvents,
+        'locationAccess': localProfile.value.locationAccess,
+        'interests': localProfile.value.interests,
+      };
+      FirebaseService.instance.setUserProfile(uid, profileMap);
+    }
+  } catch (_) {}
 }
 
 class GatherUniLogo extends StatelessWidget {
@@ -670,18 +697,65 @@ Future<void> saveUserEvents() async {
 
 Future<void> addUserEvent(Event e) async {
   final next = List<Event>.from(userEvents.value);
+
+  // If signed in, create in Firestore and use generated id
+  final uid = FirebaseService.instance.currentUser?.uid;
+  if (uid != null) {
+    try {
+      final data = e.toMap();
+      data['organizerId'] = uid;
+      final ref = await FirebaseService.instance.createEvent(data);
+      final created = Event(
+        id: ref.id,
+        title: e.title,
+        category: e.category,
+        date: e.date,
+        time: e.time,
+        location: e.location,
+        price: e.price,
+        description: e.description,
+        colors: e.colors,
+        bookings: e.bookings,
+        imageUrl: e.imageUrl,
+        isDraft: e.isDraft,
+        organizer: uid,
+      );
+      next.insert(0, created);
+      userEvents.value = next;
+      await saveUserEvents();
+      return;
+    } catch (_) {
+      // fallback to local-only
+    }
+  }
+
   next.insert(0, e);
   userEvents.value = next;
   await saveUserEvents();
 }
 
 Future<void> editUserEvent(String id, Event updated) async {
+  // If signed in and event has an id, update Firestore
+  final uid = FirebaseService.instance.currentUser?.uid;
+  if (uid != null && updated.id.isNotEmpty) {
+    try {
+      await FirebaseService.instance.updateEvent(updated.id, updated.toMap());
+    } catch (_) {}
+  }
+
   final next = userEvents.value.map((e) => e.id == id ? updated : e).toList();
   userEvents.value = next;
   await saveUserEvents();
 }
 
 Future<void> deleteUserEvent(String id) async {
+  final uid = FirebaseService.instance.currentUser?.uid;
+  if (uid != null && id.isNotEmpty) {
+    try {
+      await FirebaseService.instance.deleteEvent(id);
+    } catch (_) {}
+  }
+
   final next = userEvents.value.where((e) => e.id != id).toList();
   userEvents.value = next;
   await saveUserEvents();
