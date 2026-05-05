@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'dart:async';
 import 'src/backend/firebase_service.dart';
+import 'firebase_options.dart';
 // Firebase backend
 import 'src/shared.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -38,7 +39,9 @@ const events = sampleEvents;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // start with local cache
   await loadLocalProfile();
@@ -203,7 +206,11 @@ class GatherUniApp extends StatelessWidget {
         '/onboarding/step3': (_) => const OnboardingProfileScreen(),
         '/profile/edit': (_) => const EditProfileScreen(),
         '/organizer/create': (_) => const CreateEventScreen(),
-        '/organizer/preview': (_) => const EventPreviewScreen(),
+        '/organizer/preview': (ctx) {
+          final args = ModalRoute.of(ctx)!.settings.arguments;
+          if (args is Event) return EventPreviewScreen(event: args);
+          return EventPreviewScreen(event: events.first);
+        },
         '/organizer/dashboard': (_) => const OrganizerDashboardScreen(),
       },
     );
