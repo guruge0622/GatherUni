@@ -66,3 +66,24 @@ This project does not include a license file. Add a `LICENSE` if you want to mak
 ---
 
 If you'd like, I can add a short Getting Started section tailored to how you run the app (Android, iOS, or web), or include example Firebase setup instructions. Which would you prefer?
+
+## Firestore Security Rules
+
+I've added a recommended rules file at `firestore.rules` that enforces owner-only writes for user profiles and events. Key points:
+
+- `users/{userId}`: only the authenticated user may create/update/delete their own profile.
+- `events/{eventId}`: create requests must set `organizerId` equal to `request.auth.uid`; update/delete allowed only when the stored `organizerId` matches `request.auth.uid`.
+
+To deploy the rules with the Firebase CLI:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+Or specify a project:
+
+```bash
+firebase deploy --only firestore:rules --project YOUR_PROJECT_ID
+```
+
+Test rules using the Firebase Emulator Suite or the Firebase Console rules tester before deploying to production.
