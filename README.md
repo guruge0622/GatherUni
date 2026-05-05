@@ -97,3 +97,35 @@ Run the included PowerShell helper to install/activate the FlutterFire CLI and s
 ```
 
 Follow the interactive prompts (you must be logged in with `firebase login`).
+
+### Deploy Firestore rules
+
+You can deploy the `firestore.rules` file in this repo with one of the helper scripts or using `npx` if the global `firebase` CLI isn't available.
+
+- PowerShell (Windows):
+
+```powershell
+.\scripts\deploy-firestore-rules.ps1
+# or with explicit project id
+.\scripts\deploy-firestore-rules.ps1 -ProjectId your-project-id
+```
+
+- macOS / Linux (or WSL):
+
+```bash
+./scripts/deploy-firestore-rules.sh
+# or with explicit project id
+./scripts/deploy-firestore-rules.sh your-project-id
+```
+
+If you prefer to run without the scripts, use `npx` as a quick fallback:
+
+```bash
+npx firebase-tools deploy --only firestore:rules --project gatheruni-58fa7
+```
+
+Make sure you're logged in first:
+
+```bash
+npx firebase-tools login
+```
