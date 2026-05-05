@@ -106,7 +106,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     } catch (err) {
       UIFeedback.hideLoading(context);
       if (!mounted) return;
-      UIFeedback.showSnack(context, 'Failed to save draft: ${err.toString()}', success: false);
+      UIFeedback.showSnack(
+        context,
+        'Failed to save draft: ${err.toString()}',
+        success: false,
+      );
     }
   }
 
@@ -143,7 +147,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     } catch (err) {
       UIFeedback.hideLoading(context);
       if (!mounted) return;
-      UIFeedback.showSnack(context, 'Failed to publish: ${err.toString()}', success: false);
+      UIFeedback.showSnack(
+        context,
+        'Failed to publish: ${err.toString()}',
+        success: false,
+      );
     }
   }
 

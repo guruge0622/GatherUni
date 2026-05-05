@@ -80,9 +80,13 @@ Future<void> main() async {
         await _eventsSub?.cancel();
         _eventsSub = FirebaseService.instance.streamUserEvents(user.uid).listen(
           (snap) {
-            final events = snap.docs
-                .map((d) => Event.fromMap({'id': d.id, ...d.data()}))
-                .toList();
+            final events = snap.docs.map((d) {
+              final data = Map<String, dynamic>.from(d.data());
+              data['id'] = d.id;
+              if (data['organizerId'] != null)
+                data['organizer'] = data['organizerId'];
+              return Event.fromMap(data);
+            }).toList();
             userEvents.value = events;
           },
         );

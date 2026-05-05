@@ -54,9 +54,7 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen>
             valueListenable: userEvents,
             builder: (c, list, _) {
               final drafts = list
-                  .where(
-                    (e) => e.isDraft && (e.organizer ?? '') == organizerName,
-                  )
+                  .where((e) => e.isDraft && isEventOwnedByCurrentUser(e))
                   .toList();
               if (drafts.isEmpty) {
                 return const Center(child: Text('No drafts'));
@@ -73,9 +71,7 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen>
             valueListenable: userEvents,
             builder: (c, list, _) {
               final published = list
-                  .where(
-                    (e) => !e.isDraft && (e.organizer ?? '') == organizerName,
-                  )
+                  .where((e) => !e.isDraft && isEventOwnedByCurrentUser(e))
                   .toList();
               if (published.isEmpty) {
                 return const Center(child: Text('No published events'));
@@ -94,33 +90,40 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen>
   }
 
   Widget _eventTile(Event e) {
+    final owned = isEventOwnedByCurrentUser(e);
+
     return Card(
       child: ListTile(
         title: Text(e.title),
         subtitle: Text('${e.date} • ${e.time}'),
-        trailing: PopupMenuButton<String>(
-          onSelected: (v) async {
-            final nav = Navigator.of(context);
-            final scaffold = ScaffoldMessenger.of(context);
-            if (v == 'edit') {
-              nav.pushNamed('/organizer/create', arguments: e);
-            } else if (v == 'delete') {
-              try {
-                UIFeedback.showLoading(context, message: 'Deleting...');
-                await deleteUserEvent(e.id);
-                UIFeedback.hideLoading(context);
-                UIFeedback.showSnack(context, 'Deleted');
-              } catch (err) {
-                UIFeedback.hideLoading(context);
-                UIFeedback.showSnack(context, 'Delete failed: ${err.toString()}', success: false);
-              }
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Edit')),
-            PopupMenuItem(value: 'delete', child: Text('Delete')),
-          ],
-        ),
+        trailing: owned
+            ? PopupMenuButton<String>(
+                onSelected: (v) async {
+                  final nav = Navigator.of(context);
+                  if (v == 'edit') {
+                    nav.pushNamed('/organizer/create', arguments: e);
+                  } else if (v == 'delete') {
+                    try {
+                      UIFeedback.showLoading(context, message: 'Deleting...');
+                      await deleteUserEvent(e.id);
+                      UIFeedback.hideLoading(context);
+                      UIFeedback.showSnack(context, 'Deleted');
+                    } catch (err) {
+                      UIFeedback.hideLoading(context);
+                      UIFeedback.showSnack(
+                        context,
+                        'Delete failed: ${err.toString()}',
+                        success: false,
+                      );
+                    }
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              )
+            : null,
       ),
     );
   }

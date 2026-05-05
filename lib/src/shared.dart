@@ -695,6 +695,23 @@ Future<void> saveUserEvents() async {
   await prefs.setStringList(_userEventsKey, strings);
 }
 
+bool isEventOwnedByCurrentUser(Event e) {
+  final uid = FirebaseService.instance.currentUser?.uid;
+  final organizerName = localProfile.value.organizationName.isEmpty
+      ? localProfile.value.fullName
+      : localProfile.value.organizationName;
+
+  if (uid != null) {
+    if ((e.organizer ?? '') == uid) return true;
+    // also allow matching by display name/organization for locally-created events
+    if ((e.organizer ?? '') == organizerName) return true;
+    return false;
+  }
+
+  // not signed in: allow if organizer matches local profile name
+  return (e.organizer ?? '') == organizerName;
+}
+
 Future<void> addUserEvent(Event e) async {
   final next = List<Event>.from(userEvents.value);
 
