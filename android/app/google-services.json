@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "851553929163",
+    "project_id": "gatheruni-58fa7",
+    "storage_bucket": "gatheruni-58fa7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:851553929163:android:bb3fe3bd0ee1d4f9ccd84e",
+        "android_client_info": {
+          "package_name": "com.example.my_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3zunZn4wupxtP-WKmyCm4X6HLus12LUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
