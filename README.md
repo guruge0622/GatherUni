@@ -87,3 +87,13 @@ firebase deploy --only firestore:rules --project YOUR_PROJECT_ID
 ```
 
 Test rules using the Firebase Emulator Suite or the Firebase Console rules tester before deploying to production.
+
+### Quick configure script
+
+Run the included PowerShell helper to install/activate the FlutterFire CLI and start configuration for the Firebase project `gatheruni-58fa7`:
+
+```powershell
+.\scripts\configure-firebase.ps1
+```
+
+Follow the interactive prompts (you must be logged in with `firebase login`).
