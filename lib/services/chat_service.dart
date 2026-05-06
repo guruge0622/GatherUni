@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,6 +21,30 @@ class ChatService {
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
+      // price may be int or double in Firestore
+      double price = 0.0;
+      if (data['price'] != null) {
+        if (data['price'] is int) price = (data['price'] as int).toDouble();
+        if (data['price'] is double) price = data['price'] as double;
+        if (data['price'] is String) {
+          price = double.tryParse(data['price'] as String) ?? 0.0;
+        }
+      }
+
+      final List<Color> cols =
+          (data['colors'] as List?)
+              ?.map((c) {
+                try {
+                  return Color(int.parse(c.toString()));
+                } catch (_) {
+                  // fallback for numeric values
+                  return Color((c as int));
+                }
+              })
+              .cast<Color>()
+              .toList() ??
+          [AppColors.primaryBlue, AppColors.lightBlue];
+
       return Event(
         id: doc.id,
         title: (data['title'] ?? '') as String,
@@ -27,12 +52,10 @@ class ChatService {
         time: (data['time'] ?? '') as String,
         location: (data['location'] ?? '') as String,
         category: (data['category'] ?? '') as String,
+        price: price,
+        description: (data['description'] ?? '') as String,
         bookings: (data['bookings'] ?? 0) as int,
-        colors:
-            (data['colors'] as List?)
-                ?.map((c) => Color(int.parse(c.toString())))
-                .toList() ??
-            [0xFF4A90E2, 0xFF357ABD],
+        colors: cols,
       );
     }).toList();
   }
