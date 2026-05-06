@@ -6,6 +6,7 @@ import 'src/backend/firebase_service.dart';
 import 'firebase_options.dart';
 // Firebase backend
 import 'src/shared.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'src/theme/design_system.dart';
 import 'screens/splash_screen.dart';
@@ -42,7 +43,13 @@ const events = sampleEvents;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  // load environment variables (optional .env in project root)
+  try {
+    await dotenv.load();
+  } catch (_) {
+    // ignore: avoid_print
+    print('.env not found or failed to load; continuing without it');
+  }
   // start with local cache
   await loadLocalProfile();
   await loadUserEvents();
@@ -162,14 +169,7 @@ class _MainShellState extends State<MainShell> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const ChatScreen())),
-        tooltip: 'Chat',
-        backgroundColor: const Color(0xFF7B61FF),
-        child: const Icon(Icons.smart_toy),
-      ),
+      floatingActionButton: null,
     );
   }
 }
