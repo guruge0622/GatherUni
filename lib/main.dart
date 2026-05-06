@@ -31,6 +31,7 @@ import 'screens/feedback_screen.dart';
 import 'screens/my_tickets_screen.dart';
 import 'screens/ai_chatbot_screen.dart';
 import 'screens/edit_profile_screen.dart';
+import 'screens/chat_screen.dart';
 import 'screens/create_event_screen.dart';
 import 'screens/event_preview_screen.dart';
 import 'screens/organizer_dashboard_screen.dart';
@@ -161,13 +162,14 @@ class _MainShellState extends State<MainShell> {
           ),
         ],
       ),
-      floatingActionButton: kDebugMode
-          ? FloatingActionButton(
-              onPressed: () => Navigator.of(context).pushNamed('/events'),
-              tooltip: 'Open Events (debug)',
-              child: const Icon(Icons.list),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ChatScreen())),
+        tooltip: 'Chat',
+        backgroundColor: const Color(0xFF7B61FF),
+        child: const Icon(Icons.smart_toy),
+      ),
     );
   }
 }
