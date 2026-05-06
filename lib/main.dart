@@ -12,6 +12,7 @@ import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/onboarding_profile_screen.dart';
+import 'screens/interest_selection_screen.dart';
 import 'screens/payment_screen.dart';
 import 'screens/booking_confirmation_screen.dart';
 import 'screens/calendar_screen.dart';
@@ -46,7 +47,7 @@ Future<void> main() async {
   await loadUserEvents();
 
   // Listen for auth changes and sync Firestore data
-  StreamSubscription? _eventsSub;
+  StreamSubscription? eventsSub;
   FirebaseService.instance.authStateChanges().listen((user) async {
     if (user != null) {
       try {
@@ -78,25 +79,26 @@ Future<void> main() async {
         }
 
         // subscribe to organizer events
-        await _eventsSub?.cancel();
-        _eventsSub = FirebaseService.instance.streamUserEvents(user.uid).listen(
-          (snap) {
-            final events = snap.docs.map((d) {
-              final data = Map<String, dynamic>.from(d.data());
-              data['id'] = d.id;
-              if (data['organizerId'] != null)
-                data['organizer'] = data['organizerId'];
-              return Event.fromMap(data);
-            }).toList();
-            userEvents.value = events;
-          },
-        );
+        await eventsSub?.cancel();
+        eventsSub = FirebaseService.instance.streamUserEvents(user.uid).listen((
+          snap,
+        ) {
+          final events = snap.docs.map((d) {
+            final data = Map<String, dynamic>.from(d.data());
+            data['id'] = d.id;
+            if (data['organizerId'] != null) {
+              data['organizer'] = data['organizerId'];
+            }
+            return Event.fromMap(data);
+          }).toList();
+          userEvents.value = events;
+        });
       } catch (_) {
         // on error, keep local cache
       }
     } else {
       // signed out: cancel subscriptions and reload local cache
-      await _eventsSub?.cancel();
+      await eventsSub?.cancel();
       await loadLocalProfile();
       await loadUserEvents();
     }
@@ -199,15 +201,43 @@ class GatherUniApp extends StatelessWidget {
         '/tickets': (_) => const MyTicketsScreen(),
         '/ai-assistant': (_) => const AIChatbotScreen(),
         '/onboarding': (_) => const OnboardingProfileScreen(),
-        '/interests': (_) => const OnboardingProfileScreen(),
-        '/onboarding/step2': (_) => const OnboardingProfileScreen(),
-        '/onboarding/step3': (_) => const OnboardingProfileScreen(),
+        '/interests': (_) => const InterestSelectionScreen(),
         '/profile/edit': (_) => const EditProfileScreen(),
         '/organizer/create': (_) => const CreateEventScreen(),
         '/organizer/preview': (ctx) {
           final args = ModalRoute.of(ctx)!.settings.arguments;
           if (args is Event) return EventPreviewScreen(event: args);
-          return EventPreviewScreen(event: events.first);
+          return Scaffold(
+            appBar: AppBar(title: const Text('Event Preview')),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'No event to preview',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Please create an event first or open an existing draft.',
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(
+                        ctx,
+                      ).pushReplacementNamed('/organizer/create'),
+                      child: const Text('Create Event'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         },
         '/organizer/dashboard': (_) => const OrganizerDashboardScreen(),
       },

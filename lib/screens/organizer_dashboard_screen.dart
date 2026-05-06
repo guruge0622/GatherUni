@@ -29,9 +29,7 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final organizerName = localProfile.value.organizationName.isEmpty
-        ? localProfile.value.fullName
-        : localProfile.value.organizationName;
+    // organizer name intentionally omitted when not used
 
     return Scaffold(
       appBar: AppBar(
@@ -107,15 +105,23 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen>
                     try {
                       UIFeedback.showLoading(context, message: 'Deleting...');
                       await deleteUserEvent(e.id);
-                      UIFeedback.hideLoading(context);
-                      UIFeedback.showSnack(context, 'Deleted');
+                      if (mounted) {
+                        UIFeedback.hideLoading(context);
+                      }
+                      if (mounted) {
+                        UIFeedback.showSnack(context, 'Deleted');
+                      }
                     } catch (err) {
-                      UIFeedback.hideLoading(context);
-                      UIFeedback.showSnack(
-                        context,
-                        'Delete failed: ${err.toString()}',
-                        success: false,
-                      );
+                      if (mounted) {
+                        UIFeedback.hideLoading(context);
+                      }
+                      if (mounted) {
+                        UIFeedback.showSnack(
+                          context,
+                          'Delete failed: ${err.toString()}',
+                          success: false,
+                        );
+                      }
                     }
                   }
                 },

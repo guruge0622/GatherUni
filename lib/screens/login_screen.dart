@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../src/shared.dart';
 import '../src/backend/firebase_service.dart';
+import '../src/features/auth/auth_service.dart';
 import '../src/ui/feedback.dart';
 
 final _emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
@@ -43,11 +44,26 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     try {
       UIFeedback.showLoading(context, message: 'Signing in...');
-      await FirebaseService.instance.signInWithGoogle();
-      UIFeedback.hideLoading(context);
-      if (mounted) Navigator.of(context).pushReplacementNamed('/main');
+      await AuthService.instance.signInWithGoogle();
+
+      final uid = AuthService.instance.currentUser?.uid;
+      if (uid == null) {
+        if (mounted) UIFeedback.hideLoading(context);
+        _showError('Sign-in succeeded but no user id was found.');
+        return;
+      }
+
+      final profile = await FirebaseService.instance.fetchUserProfileMap(uid);
+      if (mounted) UIFeedback.hideLoading(context);
+
+      if (profile == null ||
+          (profile['name'] == null || profile['name'].toString().isEmpty)) {
+        if (mounted) Navigator.of(context).pushReplacementNamed('/onboarding');
+      } else {
+        if (mounted) Navigator.of(context).pushReplacementNamed('/home');
+      }
     } catch (e) {
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       _showError('Google sign-in failed: ${e.toString()}');
     }
   }
@@ -149,66 +165,22 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.softBlue),
-                    ),
-                    child: SvgPicture.asset(
-                      'assets/icons/facebook.svg',
-                      width: 20,
-                      height: 20,
-                    ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _signInWithGoogle,
+                icon: const FaIcon(FontAwesomeIcons.google, size: 20),
+                label: const Text('Continue with Google'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: AppColors.inputBorder),
                   ),
                 ),
-                const SizedBox(width: 14),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.softBlue),
-                    ),
-                    child: SvgPicture.asset(
-                      'assets/icons/instagram.svg',
-                      width: 20,
-                      height: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                GestureDetector(
-                  onTap: _signInWithGoogle,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.softBlue),
-                    ),
-                    child: SvgPicture.asset(
-                      'assets/icons/google.svg',
-                      width: 20,
-                      height: 20,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),

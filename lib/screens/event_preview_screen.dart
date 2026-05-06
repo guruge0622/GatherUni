@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../src/shared.dart';
-import '../src/theme/design_system.dart';
+// design system not required here
 import '../src/ui/feedback.dart';
 
 class EventPreviewScreen extends StatefulWidget {
@@ -17,12 +17,12 @@ class _EventPreviewScreenState extends State<EventPreviewScreen> {
     try {
       UIFeedback.showLoading(context, message: 'Publishing...');
       await addUserEvent(widget.event);
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       if (!mounted) return;
       UIFeedback.showSnack(context, 'Event published');
       Navigator.of(context).pushNamed('/organizer/dashboard');
     } catch (e) {
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       UIFeedback.showSnack(
         context,
         'Publish failed: ${e.toString()}',
@@ -78,7 +78,9 @@ class _EventPreviewScreenState extends State<EventPreviewScreen> {
               Row(
                 children: [
                   OutlinedButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed('/organizer/create', arguments: event),
                     child: const Text('Edit'),
                   ),
                   const SizedBox(width: 12),

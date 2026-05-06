@@ -18,14 +18,32 @@ class FirebaseService {
   User? get currentUser => _auth.currentUser;
 
   Future<UserCredential> signInWithGoogle() async {
-    final googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) throw Exception('Google sign-in aborted');
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    return _auth.signInWithCredential(credential);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) throw Exception('Google sign-in aborted');
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      return await _auth.signInWithCredential(credential);
+    } catch (e) {
+      // Common cause on Android: missing SHA-1 in Firebase Console or outdated
+      // google-services.json (no oauth_client entries). Provide actionable
+      // guidance in the thrown exception to help the developer fix the setup.
+      final msg = StringBuffer();
+      msg.writeln('Google Sign-In failed: ${e.toString()}');
+      msg.writeln(
+        'If you are running on Android, ensure your app SHA-1 is added in the Firebase Console for the Android app package (applicationId).',
+      );
+      msg.writeln(
+        'Then re-download the updated google-services.json or re-run `flutterfire configure` so the OAuth client entry is present.',
+      );
+      msg.writeln(
+        'To get your debug SHA-1 run: cd android && ./gradlew signingReport (on Windows PowerShell: .\\gradlew signingReport)',
+      );
+      throw Exception(msg.toString());
+    }
   }
 
   Future<void> signOut() async {

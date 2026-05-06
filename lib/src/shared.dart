@@ -16,6 +16,10 @@ class AppColors {
   static const card = Colors.white;
 }
 
+extension ColorWithValues on Color {
+  Color withValues({double alpha = 1.0}) => withAlpha((alpha * 255).round());
+}
+
 const interests = ['Academics', 'Arts', 'Cultural', 'Sports', 'Tech'];
 
 class LocalProfileData {

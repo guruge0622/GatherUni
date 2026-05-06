@@ -5,6 +5,53 @@ import 'package:image_picker/image_picker.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
 
+const _facultyDegrees = {
+  'Faculty of Defence and Strategic Studies (FDSS)': [
+    'Bachelor of Science in Strategic Studies and International Relations',
+  ],
+  'Faculty of Medicine (FOM)': [
+    'Bachelor of Medicine and Bachelor of Surgery (MBBS)',
+  ],
+  'Faculty of Engineering (FOE)': [
+    'BSc (Hons) in Aeronautical Engineering',
+    'BSc (Hons) in Building Services Engineering',
+    'BSc (Hons) in Civil Engineering',
+    'BSc (Hons) in Electrical and Electronic Engineering',
+    'BSc (Hons) in Electronic and Telecommunication Engineering',
+    'BSc (Hons) in Mechanical Engineering',
+    'BSc (Hons) in Mechatronic Engineering',
+    'BSc (Hons) in Marine Engineering',
+    'BSc (Hons) in Naval Architecture and Marine Engineering',
+  ],
+  'Faculty of Law (FOL)': ['Bachelor of Laws (LLB)'],
+  'Faculty of Management, Social Sciences and Humanities (FMSH)': [
+    'BSc in Management and Technical Sciences',
+    'BSc (Hons) in Management and Technical Sciences',
+    'BSc in Logistics Management',
+    'BSc in Social Sciences',
+    'BA in Teaching English to Speakers of Other Languages (TESOL)',
+    'BSc (Hons) in Financial Analytics',
+    'BSc (Hons) in Management',
+  ],
+  'Faculty of Computing (FOC)': [
+    'BSc (Hons) in Computer Science',
+    'BSc (Hons) in Software Engineering',
+    'BSc (Hons) in Computer Engineering',
+    'BSc (Hons) in Information Technology',
+  ],
+  'Faculty of Criminal Justice (FOCJ)': [
+    'BSc in Criminology and Criminal Justice',
+  ],
+  'Faculty of Technology': [
+    'BET (Hons) in Biomedical Instrumentation Technology',
+    'BET (Hons) in Building Services Technology',
+    'BT (Hons) in Information and Communication Technology',
+    'BBST (Hons) in Applied Biotechnology',
+    'BET (Hons) in Construction Technology',
+  ],
+  'Other': ['Other'],
+};
+
 class OnboardingProfileScreen extends StatefulWidget {
   const OnboardingProfileScreen({super.key});
 
@@ -55,10 +102,45 @@ class _OnboardingProfileScreenState extends State<OnboardingProfileScreen> {
   }
 
   void _goNext() {
+    final profile = localProfile.value;
+
     if (_page == 4) {
       Navigator.of(context).pushReplacementNamed('/main');
       return;
     }
+
+    // Page 1: require name and faculty
+    if (_page == 1) {
+      if (profile.fullName.trim().isEmpty || profile.faculty.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter your name and faculty.')),
+        );
+        return;
+      }
+
+      if (profile.role == 'Student') {
+        if (profile.degree.trim().isEmpty ||
+            profile.academicYear.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please select your degree and academic year.'),
+            ),
+          );
+          return;
+        }
+      }
+    }
+
+    // Page 2: require at least one interest
+    if (_page == 2) {
+      if (profile.interests.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select at least one interest.')),
+        );
+        return;
+      }
+    }
+
     _controller.nextPage(
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
@@ -90,82 +172,72 @@ class _OnboardingProfileScreenState extends State<OnboardingProfileScreen> {
                 colors: [GatherColors.background, GatherColors.softBlue],
               ),
             ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: _goBack,
-                          icon: Icon(
-                            _page == 0
-                                ? Icons.close_rounded
-                                : Icons.arrow_back_rounded,
-                          ),
-                        ),
-                        Expanded(child: _ProgressDots(activeIndex: _page)),
-                        TextButton(
-                          onPressed: () => Navigator.of(
-                            context,
-                          ).pushReplacementNamed('/main'),
-                          child: const Text('Skip'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: PageView(
-                      controller: _controller,
-                      onPageChanged: (index) => setState(() => _page = index),
-                      children: [
-                        _WelcomePage(onNext: _goNext),
-                        _ProfileInfoPage(
-                          profile: profile,
-                          nameCtrl: _nameCtrl,
-                          facultyCtrl: _facultyCtrl,
-                          academicYears: _academicYears,
-                          onPhotoTap: _pickPhoto,
-                        ),
-                        _InterestsPage(profile: profile),
-                        _PreferencesPage(profile: profile),
-                        _CompletionPage(onFinish: _goNext),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _goBack,
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(54),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
+            // ignore: deprecated_member_use
+            child: WillPopScope(
+              onWillPop: () async => false,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Row(
+                        children: [
+                          if (_page == 0)
+                            const SizedBox(width: 48)
+                          else
+                            IconButton(
+                              onPressed: _goBack,
+                              icon: const Icon(Icons.arrow_back_rounded),
                             ),
-                            child: Text(_page == 0 ? 'Close' : 'Back'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _goNext,
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                            child: Text(_page == 4 ? 'Go to Home' : 'Continue'),
-                          ),
-                        ),
-                      ],
+                          Expanded(child: _ProgressDots(activeIndex: _page)),
+                          const SizedBox(width: 48),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: PageView(
+                        controller: _controller,
+                        onPageChanged: (index) => setState(() => _page = index),
+                        children: [
+                          _WelcomePage(onNext: _goNext),
+                          _ProfileInfoPage(
+                            profile: profile,
+                            nameCtrl: _nameCtrl,
+                            facultyCtrl: _facultyCtrl,
+                            academicYears: _academicYears,
+                            onPhotoTap: _pickPhoto,
+                          ),
+                          _InterestsPage(profile: profile),
+                          _PreferencesPage(profile: profile),
+                          _CompletionPage(onFinish: _goNext),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+                      child: _page == 3
+                          ? ElevatedButton(
+                              onPressed: () async {
+                                final messenger = ScaffoldMessenger.of(context);
+                                await saveLocalProfile();
+                                if (!mounted) return;
+                                messenger.showSnackBar(
+                                  const SnackBar(content: Text('Setup saved')),
+                                );
+                                _goNext();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(56),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              child: const Text('Save'),
+                            )
+                          : const SizedBox(height: 22),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -301,32 +373,78 @@ class _ProfileInfoPage extends StatelessWidget {
               onChanged: (value) => updateLocalProfile(fullName: value.trim()),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: facultyCtrl,
+            DropdownButtonFormField<String>(
+              initialValue: profile.role.isEmpty ? 'Student' : profile.role,
+              items: const [
+                DropdownMenuItem(value: 'Student', child: Text('Student')),
+                DropdownMenuItem(value: 'Staff', child: Text('Staff')),
+              ],
+              onChanged: (v) => updateLocalProfile(role: v ?? 'Student'),
+              decoration: const InputDecoration(labelText: 'Role'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: profile.faculty.isEmpty ? null : profile.faculty,
+              isExpanded: true,
+              items: _facultyDegrees.keys
+                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                  .toList(),
+              onChanged: (v) {
+                updateLocalProfile(faculty: v ?? '');
+                // clear degree when faculty changes
+                updateLocalProfile(degree: '');
+              },
               decoration: const InputDecoration(
                 labelText: 'Faculty / Department',
                 prefixIcon: Icon(Icons.apartment_rounded),
               ),
-              onChanged: (value) => updateLocalProfile(faculty: value.trim()),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: profile.academicYear.isEmpty
-                  ? null
-                  : profile.academicYear,
-              isExpanded: true,
-              items: academicYears
-                  .map(
-                    (year) => DropdownMenuItem(value: year, child: Text(year)),
-                  )
-                  .toList(),
-              onChanged: (value) =>
-                  updateLocalProfile(academicYear: value ?? ''),
-              decoration: const InputDecoration(
-                labelText: 'Academic Year',
-                prefixIcon: Icon(Icons.calendar_month_rounded),
+            // Degree (only for students)
+            if (profile.role == 'Student') ...[
+              DropdownButtonFormField<String>(
+                initialValue: profile.degree.isEmpty ? null : profile.degree,
+                isExpanded: true,
+                items:
+                    (profile.faculty.isNotEmpty &&
+                        _facultyDegrees[profile.faculty] != null)
+                    ? _facultyDegrees[profile.faculty]!
+                          .map(
+                            (d) => DropdownMenuItem(value: d, child: Text(d)),
+                          )
+                          .toList()
+                    : [],
+                onChanged: profile.faculty.isEmpty
+                    ? null
+                    : (v) => updateLocalProfile(degree: v ?? ''),
+                decoration: const InputDecoration(
+                  labelText: 'Degree',
+                  prefixIcon: Icon(Icons.school_rounded),
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+            ],
+            if (profile.role == 'Student') ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: profile.academicYear.isEmpty
+                    ? null
+                    : profile.academicYear,
+                isExpanded: true,
+                items: academicYears
+                    .map(
+                      (year) =>
+                          DropdownMenuItem(value: year, child: Text(year)),
+                    )
+                    .toList(),
+                onChanged: (value) =>
+                    updateLocalProfile(academicYear: value ?? ''),
+                decoration: const InputDecoration(
+                  labelText: 'Academic Year',
+                  prefixIcon: Icon(Icons.calendar_month_rounded),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -431,6 +549,7 @@ class _PreferencesPage extends StatelessWidget {
               value: profile.locationAccess,
               onChanged: (value) => updateLocalProfile(locationAccess: value),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -451,8 +570,57 @@ class _CompletionPageState extends State<_CompletionPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animation = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 650),
+    duration: const Duration(milliseconds: 900),
   )..forward();
+
+  @override
+  void initState() {
+    super.initState();
+    _animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (!mounted) return;
+          widget.onFinish();
+        });
+      }
+    });
+  }
+
+  late final Animation<double> _scaleAnim = CurvedAnimation(
+    parent: _animation,
+    curve: const Interval(0.0, 0.45, curve: Curves.elasticOut),
+  );
+
+  late final Animation<double> _textFade = CurvedAnimation(
+    parent: _animation,
+    curve: const Interval(0.45, 0.75, curve: Curves.easeOut),
+  );
+
+  late final Animation<Offset> _textSlide =
+      Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(
+        CurvedAnimation(
+          parent: _animation,
+          curve: const Interval(0.45, 0.85, curve: Curves.easeOut),
+        ),
+      );
+  late final Animation<double> _circleFade = CurvedAnimation(
+    parent: _animation,
+    curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+  );
+
+  // Icon pop/fade
+  late final Animation<double> _iconScale = Tween<double>(begin: 0.2, end: 1.0)
+      .animate(
+        CurvedAnimation(
+          parent: _animation,
+          curve: const Interval(0.35, 0.65, curve: Curves.elasticOut),
+        ),
+      );
+
+  late final Animation<double> _iconFade = CurvedAnimation(
+    parent: _animation,
+    curve: const Interval(0.35, 0.65, curve: Curves.easeIn),
+  );
 
   @override
   void dispose() {
@@ -467,57 +635,67 @@ class _CompletionPageState extends State<_CompletionPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ScaleTransition(
-            scale: CurvedAnimation(
-              parent: _animation,
-              curve: Curves.elasticOut,
-            ),
-            child: Container(
-              width: 116,
-              height: 116,
-              decoration: const BoxDecoration(
-                color: GatherColors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_rounded,
-                color: Colors.white,
-                size: 70,
+          FadeTransition(
+            opacity: _circleFade,
+            child: ScaleTransition(
+              scale: _scaleAnim,
+              child: Container(
+                width: 116,
+                height: 116,
+                decoration: const BoxDecoration(
+                  color: GatherColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: FadeTransition(
+                    opacity: _iconFade,
+                    child: ScaleTransition(
+                      scale: _iconScale,
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 70,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 28),
-          const Text(
-            'You are all set!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: GatherColors.textPrimary,
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
+          FadeTransition(
+            opacity: _textFade,
+            child: SlideTransition(
+              position: _textSlide,
+              child: const Text(
+                'You are all set!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: GatherColors.textPrimary,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Personalized recommendations are ready for your next campus event.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: GatherColors.textSecondary,
-              fontSize: 15,
-              height: 1.4,
-              fontWeight: FontWeight.w600,
+          FadeTransition(
+            opacity: _textFade,
+            child: SlideTransition(
+              position: _textSlide,
+              child: const Text(
+                'Personalized recommendations are ready for your next campus event.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: GatherColors.textSecondary,
+                  fontSize: 15,
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 28),
-          ElevatedButton(
-            onPressed: widget.onFinish,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(190, 54),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
-            child: const Text('Go to Home'),
-          ),
         ],
       ),
     );

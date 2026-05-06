@@ -99,12 +99,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       } else {
         await addUserEvent(e);
       }
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       if (!mounted) return;
       UIFeedback.showSnack(context, 'Draft saved');
       Navigator.of(context).pushNamed('/organizer/dashboard');
     } catch (err) {
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       if (!mounted) return;
       UIFeedback.showSnack(
         context,
@@ -140,12 +140,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       } else {
         await addUserEvent(e);
       }
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       if (!mounted) return;
       UIFeedback.showSnack(context, 'Event published');
       Navigator.of(context).pushNamed('/organizer/dashboard');
     } catch (err) {
-      UIFeedback.hideLoading(context);
+      if (mounted) UIFeedback.hideLoading(context);
       if (!mounted) return;
       UIFeedback.showSnack(
         context,

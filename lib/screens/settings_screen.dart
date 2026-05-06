@@ -76,20 +76,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 child: TextButton(
                   onPressed: () async {
+                    final nav = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
                     try {
                       UIFeedback.showLoading(
                         context,
                         message: 'Signing out...',
                       );
                       await FirebaseService.instance.signOut();
-                      UIFeedback.hideLoading(context);
+                      if (nav.canPop()) nav.pop();
                       if (!mounted) return;
-                      Navigator.of(
-                        context,
-                      ).pushNamedAndRemoveUntil('/login', (r) => false);
+                      nav.pushNamedAndRemoveUntil('/login', (r) => false);
                     } catch (e) {
-                      UIFeedback.hideLoading(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      if (nav.canPop()) nav.pop();
+                      messenger.showSnackBar(
                         SnackBar(
                           content: Text('Sign out failed: ${e.toString()}'),
                         ),

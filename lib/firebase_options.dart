@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'gatheruni-58fa7.firebasestorage.app',
     measurementId: 'G-HN68WQY2GK',
   );
+
 }

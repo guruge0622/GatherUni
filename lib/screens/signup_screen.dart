@@ -2,53 +2,6 @@ import 'package:flutter/material.dart';
 import '../src/shared.dart';
 import '../src/components/custom_button.dart';
 
-const _facultyDegrees = {
-  'Faculty of Defence and Strategic Studies (FDSS)': [
-    'Bachelor of Science in Strategic Studies and International Relations',
-  ],
-  'Faculty of Medicine (FOM)': [
-    'Bachelor of Medicine and Bachelor of Surgery (MBBS)',
-  ],
-  'Faculty of Engineering (FOE)': [
-    'BSc (Hons) in Aeronautical Engineering',
-    'BSc (Hons) in Building Services Engineering',
-    'BSc (Hons) in Civil Engineering',
-    'BSc (Hons) in Electrical and Electronic Engineering',
-    'BSc (Hons) in Electronic and Telecommunication Engineering',
-    'BSc (Hons) in Mechanical Engineering',
-    'BSc (Hons) in Mechatronic Engineering',
-    'BSc (Hons) in Marine Engineering',
-    'BSc (Hons) in Naval Architecture and Marine Engineering',
-  ],
-  'Faculty of Law (FOL)': ['Bachelor of Laws (LLB)'],
-  'Faculty of Management, Social Sciences and Humanities (FMSH)': [
-    'BSc in Management and Technical Sciences',
-    'BSc (Hons) in Management and Technical Sciences',
-    'BSc in Logistics Management',
-    'BSc in Social Sciences',
-    'BA in Teaching English to Speakers of Other Languages (TESOL)',
-    'BSc (Hons) in Financial Analytics',
-    'BSc (Hons) in Management',
-  ],
-  'Faculty of Computing (FOC)': [
-    'BSc (Hons) in Computer Science',
-    'BSc (Hons) in Software Engineering',
-    'BSc (Hons) in Computer Engineering',
-    'BSc (Hons) in Information Technology',
-  ],
-  'Faculty of Criminal Justice (FOCJ)': [
-    'BSc in Criminology and Criminal Justice',
-  ],
-  'Faculty of Technology': [
-    'BET (Hons) in Biomedical Instrumentation Technology',
-    'BET (Hons) in Building Services Technology',
-    'BT (Hons) in Information and Communication Technology',
-    'BBST (Hons) in Applied Biotechnology',
-    'BET (Hons) in Construction Technology',
-  ],
-  'Other': ['Other'],
-};
-
 String _passwordStrengthLabel(String pwd) {
   int score = 0;
   if (pwd.length >= 8) score++;
@@ -80,8 +33,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
-  String? _degree;
-  String? _faculty;
   bool _agree = true;
 
   @override
@@ -116,20 +67,9 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!_agree) {
       return _showError('You must agree to personal data processing');
     }
-    if (_faculty == null || _faculty!.isEmpty) {
-      return _showError('Please select your faculty');
-    }
-    if (_degree == null || _degree!.isEmpty) {
-      return _showError('Please select your degree programme');
-    }
+    // Faculty and degree are collected in onboarding; skip here.
 
-    updateLocalProfile(
-      fullName: name,
-      email: email,
-      role: 'Student',
-      faculty: _faculty,
-      degree: _degree,
-    );
+    updateLocalProfile(fullName: name, email: email, role: 'Student');
 
     // UI-only: simulate success and navigate to onboarding
     if (mounted) Navigator.of(context).pushReplacementNamed('/onboarding');
@@ -186,49 +126,7 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: _faculty,
-          isExpanded: true,
-          isDense: true,
-          items: _facultyDegrees.keys
-              .map(
-                (f) => DropdownMenuItem(
-                  value: f,
-                  child: Text(f, maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
-              )
-              .toList(),
-          onChanged: (v) => setState(() {
-            _faculty = v;
-            _degree = null; // reset degree when faculty changes
-          }),
-          decoration: const InputDecoration(labelText: 'Faculty'),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          initialValue: _degree,
-          isExpanded: true,
-          isDense: true,
-          items: (_faculty != null && _facultyDegrees[_faculty] != null)
-              ? _facultyDegrees[_faculty]!
-                    .map(
-                      (d) => DropdownMenuItem(
-                        value: d,
-                        child: Text(
-                          d,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList()
-              : [],
-          onChanged: _faculty == null
-              ? null
-              : (v) => setState(() => _degree = v),
-          decoration: const InputDecoration(labelText: 'Degree Programme'),
-          disabledHint: const Text('Select faculty first'),
-        ),
+        // Faculty and degree selection moved to onboarding flow.
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -263,8 +161,6 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
         const SizedBox(height: 12),
         CustomButton(label: 'Sign up', onPressed: _submit),
-        const SizedBox(height: 22),
-        const SocialSignInRow(),
         const SizedBox(height: 18),
         AuthSwitch(
           text: 'Already have an account?',
