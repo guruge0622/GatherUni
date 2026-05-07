@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:add_2_calendar/add_2_calendar.dart';
+import 'package:intl/intl.dart';
 import '../src/theme/design_system.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
@@ -6,7 +8,8 @@ class BookingConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final bookingId = args != null ? args['bookingId'] as String? : null;
     final event = args != null ? args['event'] as Event? : null;
     final quantity = args != null ? args['quantity'] as int? : 1;
@@ -171,10 +174,42 @@ class BookingConfirmationScreen extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // add to calendar placeholder
-                            },
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  // Try to build a sensible start/end time from event data
+                                  DateTime start;
+                                  try {
+                                    start = DateFormat('MMMM d, yyyy h:mm a').parseLoose('${event?.date ?? ''} ${event?.time ?? ''}');
+                                  } catch (_) {
+                                    try {
+                                      start = DateFormat('MMM d, yyyy h:mm a').parseLoose('${event?.date ?? ''} ${event?.time ?? ''}');
+                                    } catch (_) {
+                                      start = DateTime.now().add(const Duration(days: 1));
+                                    }
+                                  }
+                                  final end = start.add(const Duration(hours: 2));
+
+                                  final calEvent = Event(
+                                    title: event?.title ?? 'Event',
+                                    description: event?.description ?? '',
+                                    location: event?.location ?? '',
+                                    startDate: start,
+                                    endDate: end,
+                                  );
+
+                                  try {
+                                    await Add2Calendar.addEvent2Cal(calEvent);
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Added to calendar')),
+                                    );
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Failed to add calendar event: ${e.toString()}')),
+                                    );
+                                  }
+                                },
                             icon: const Icon(Icons.calendar_month_outlined),
                             label: const Text('Add to Calendar'),
                             style: ElevatedButton.styleFrom(
@@ -197,7 +232,8 @@ class BookingConfirmationScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () => Navigator.of(context).pushNamed('/tickets'),
+                            onPressed: () =>
+                                Navigator.of(context).pushNamed('/tickets'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
