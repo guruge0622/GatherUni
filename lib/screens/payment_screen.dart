@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
+import '../src/backend/firebase_service.dart';
 
-class PaymentScreen extends StatelessWidget {
+class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
+
+  @override
+  State<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -118,12 +126,57 @@ class PaymentScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          ElevatedButton(
-            onPressed: () =>
-                Navigator.of(context).pushReplacementNamed(
-              '/booking-confirmation',
+          SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _loading
+                  ? null
+                  : () async {
+                      if (event == null) return;
+                      setState(() => _loading = true);
+                      final user = FirebaseService.instance.currentUser;
+                      if (user == null) {
+                        setState(() => _loading = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please sign in to continue')),
+                        );
+                        return;
+                      }
+
+                      try {
+                        final bookingRef = await FirebaseService.instance.createBookingTransactional(
+                          eventId: event.id,
+                          userId: user.uid,
+                        );
+                        if (!mounted) return;
+                        Navigator.of(context).pushReplacementNamed(
+                          '/booking-confirmation',
+                          arguments: {'bookingId': bookingRef.id, 'event': event},
+                        );
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Booking failed: ${e.toString()}')),
+                        );
+                      } finally {
+                        if (mounted) setState(() => _loading = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GatherColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              child: _loading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(total == 0 ? 'Confirm Booking' : 'Pay Now'),
             ),
-            child: Text(total == 0 ? 'Confirm Booking' : 'Pay Now'),
           ),
         ],
       ),
