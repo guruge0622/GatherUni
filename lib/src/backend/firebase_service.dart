@@ -102,4 +102,71 @@ class FirebaseService {
     final upload = await ref.putFile(file);
     return upload.ref.getDownloadURL();
   }
+
+  // Transactional booking creation: creates a booking document under
+  // events/{eventId}/bookings/{bookingId} and atomically increments the
+  // parent event's `bookings` counter. Returns the new booking DocumentReference.
+  Future<DocumentReference<Map<String, dynamic>>> createBookingTransactional({
+    required String eventId,
+    required String userId,
+    Map<String, dynamic>? meta,
+  }) async {
+    final bookingRef = _fs.collection('events').doc(eventId).collection('bookings').doc();
+
+    return await _fs.runTransaction((tx) async {
+      final eventRef = _fs.collection('events').doc(eventId);
+      final eventSnap = await tx.get(eventRef);
+      if (!eventSnap.exists) throw Exception('Event not found');
+
+      final eventData = eventSnap.data() ?? <String, dynamic>{};
+      final bookingsValue = eventData['bookings'] ?? 0;
+      final currentBookings = (bookingsValue is int) ? bookingsValue : (bookingsValue as num).toInt();
+
+      final bookingData = <String, dynamic>{
+        'userId': userId,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+      if (meta != null) bookingData.addAll(meta);
+
+      tx.set(bookingRef, bookingData);
+      tx.update(eventRef, {'bookings': currentBookings + 1});
+
+      return bookingRef;
+    });
+  }
+
+  // Transactional booking cancellation: deletes booking document and
+  // decrements the parent's `bookings` counter atomically. Caller must
+  // pass `userId` of the requester; cancellation is allowed if the
+  // requester is the booking owner or the event organizer.
+  Future<void> cancelBookingTransactional({
+    required String eventId,
+    required String bookingId,
+    required String userId,
+  }) async {
+    await _fs.runTransaction((tx) async {
+      final bookingRef = _fs.collection('events').doc(eventId).collection('bookings').doc(bookingId);
+      final bookingSnap = await tx.get(bookingRef);
+      if (!bookingSnap.exists) throw Exception('Booking not found');
+
+      final bookingData = bookingSnap.data() ?? <String, dynamic>{};
+      final bookingOwner = bookingData['userId'] as String?;
+
+      final eventRef = _fs.collection('events').doc(eventId);
+      final eventSnap = await tx.get(eventRef);
+      if (!eventSnap.exists) throw Exception('Event not found');
+      final eventData = eventSnap.data() ?? <String, dynamic>{};
+      final organizerId = eventData['organizerId'] as String?;
+
+      final allowed = (bookingOwner != null && bookingOwner == userId) || (organizerId != null && organizerId == userId);
+      if (!allowed) throw Exception('Not authorized to cancel this booking');
+
+      tx.delete(bookingRef);
+
+      final bookingsValue = eventData['bookings'] ?? 0;
+      final currentBookings = (bookingsValue is int) ? bookingsValue : (bookingsValue as num).toInt();
+      final next = currentBookings > 0 ? currentBookings - 1 : 0;
+      tx.update(eventRef, {'bookings': next});
+    });
+  }
 }
