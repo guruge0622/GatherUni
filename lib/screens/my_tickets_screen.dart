@@ -6,6 +6,9 @@ import '../src/backend/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:path_provider/path_provider.dart';
 
 enum TicketFilter { all, upcoming, past }
 
@@ -42,6 +45,23 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
       }
     } catch (_) {}
     return sampleEvents.first.colors;
+  }
+
+  Future<Uint8List> _renderQrToPng(String data, int size) async {
+    final painter = QrPainter(
+      data: data,
+      version: QrVersions.auto,
+      gapless: true,
+      color: Colors.black,
+      emptyColor: Colors.white,
+    );
+
+    final picData = await painter.toImageData(
+      size.toDouble(),
+      format: ui.ImageByteFormat.png,
+    );
+    if (picData == null) throw Exception('Failed to render QR image');
+    return picData.buffer.asUint8List();
   }
 
   DateTime _parseDate(String dateStr) {
@@ -312,6 +332,44 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                               onPressed: () =>
                                                   Navigator.of(ctx).pop(),
                                               child: const Text('Close'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                try {
+                                                  final bytes =
+                                                      await _renderQrToPng(
+                                                        shareText.toString(),
+                                                        800,
+                                                      );
+                                                  final dir =
+                                                      await getTemporaryDirectory();
+                                                  final file = File(
+                                                    '${dir.path}/ticket_${DateTime.now().millisecondsSinceEpoch}.png',
+                                                  );
+                                                  await file.writeAsBytes(
+                                                    bytes,
+                                                  );
+                                                  await Share.shareFiles(
+                                                    [file.path],
+                                                    text: shareText.toString(),
+                                                  );
+                                                } catch (e) {
+                                                  if (!mounted) return;
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Failed to export QR: ${e.toString()}',
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                                Navigator.of(ctx).pop();
+                                              },
+                                              child: const Text(
+                                                'Save & Share Image',
+                                              ),
                                             ),
                                             TextButton(
                                               onPressed: () {
