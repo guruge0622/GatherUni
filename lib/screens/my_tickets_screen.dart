@@ -4,6 +4,8 @@ import '../src/shared.dart';
 import '../src/theme/design_system.dart';
 import '../src/backend/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 enum TicketFilter { all, upcoming, past }
 
@@ -25,12 +27,15 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
       if (raw is List) {
         final parsed = <Color>[];
         for (final e in raw) {
-          if (e is Color) parsed.add(e);
+          if (e is Color)
+            parsed.add(e);
           else if (e is String) {
             var s = e.trim();
             if (s.startsWith('#')) s = s.replaceFirst('#', '0xFF');
-            if (s.startsWith('0x')) parsed.add(Color(int.parse(s)));
-            else parsed.add(Color(int.parse('0xFF' + s)));
+            if (s.startsWith('0x'))
+              parsed.add(Color(int.parse(s)));
+            else
+              parsed.add(Color(int.parse('0xFF' + s)));
           }
         }
         if (parsed.isNotEmpty) return parsed;
@@ -114,7 +119,9 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseService.instance.currentUser ?? FirebaseAuth.instance.currentUser;
+    final user =
+        FirebaseService.instance.currentUser ??
+        FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: GatherColors.background,
@@ -161,7 +168,8 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                       itemBuilder: (context, idx) {
                         final item = items[idx];
                         final event = item['event'] as Map<String, dynamic>?;
-                        final booking = item['booking'] as Map<String, dynamic>?;
+                        final booking =
+                            item['booking'] as Map<String, dynamic>?;
                         final title = event?['title'] as String? ?? 'Event';
                         final date = event?['date'] as String? ?? '';
                         final time = event?['time'] as String? ?? '';
@@ -183,7 +191,10 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: GatherColors.withOpacity(Colors.black, .03),
+                                color: GatherColors.withOpacity(
+                                  Colors.black,
+                                  .03,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 8),
                               ),
@@ -196,11 +207,17 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                 width: 72,
                                 height: 72,
                                 decoration: BoxDecoration(
-                                    gradient: LinearGradient(colors: _colorsFromEvent(event)),
+                                  gradient: LinearGradient(
+                                    colors: _colorsFromEvent(event),
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Center(
-                                  child: Icon(Icons.event, color: Colors.white, size: 30),
+                                  child: Icon(
+                                    Icons.event,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -230,7 +247,9 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                     Text(
                                       isPast ? 'Past event' : '1 Ticket',
                                       style: TextStyle(
-                                        color: isPast ? Colors.grey : GatherColors.primary,
+                                        color: isPast
+                                            ? Colors.grey
+                                            : GatherColors.primary,
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
@@ -256,7 +275,57 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                   const SizedBox(height: 8),
                                   IconButton(
                                     tooltip: 'Share ticket',
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      final eventId =
+                                          item['eventId'] as String? ?? '';
+                                      final shareText = StringBuffer()
+                                        ..writeln('Ticket: $title')
+                                        ..writeln('$date • $time')
+                                        ..writeln(location)
+                                        ..writeln()
+                                        ..writeln('Event ID: $eventId');
+
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text('Share Ticket'),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              QrImage(
+                                                data: shareText.toString(),
+                                                size: 190,
+                                                backgroundColor: Colors.white,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                'Scan to import ticket or share it via your apps.',
+                                                style: TextStyle(
+                                                  color: GatherColors
+                                                      .textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(),
+                                              child: const Text('Close'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Share.share(
+                                                  shareText.toString(),
+                                                );
+                                                Navigator.of(ctx).pop();
+                                              },
+                                              child: const Text('Share'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                     icon: const Icon(Icons.ios_share_rounded),
                                   ),
                                 ],
