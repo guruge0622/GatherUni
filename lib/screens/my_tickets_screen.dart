@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
+import '../src/backend/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 enum TicketFilter { all, upcoming, past }
 
@@ -14,6 +16,28 @@ class MyTicketsScreen extends StatefulWidget {
 
 class _MyTicketsScreenState extends State<MyTicketsScreen> {
   TicketFilter _filter = TicketFilter.all;
+
+  List<Color> _colorsFromEvent(Map<String, dynamic>? event) {
+    if (event == null) return sampleEvents.first.colors;
+    final raw = event['colors'];
+    try {
+      if (raw is List<Color>) return raw;
+      if (raw is List) {
+        final parsed = <Color>[];
+        for (final e in raw) {
+          if (e is Color) parsed.add(e);
+          else if (e is String) {
+            var s = e.trim();
+            if (s.startsWith('#')) s = s.replaceFirst('#', '0xFF');
+            if (s.startsWith('0x')) parsed.add(Color(int.parse(s)));
+            else parsed.add(Color(int.parse('0xFF' + s)));
+          }
+        }
+        if (parsed.isNotEmpty) return parsed;
+      }
+    } catch (_) {}
+    return sampleEvents.first.colors;
+  }
 
   DateTime _parseDate(String dateStr) {
     try {
@@ -90,119 +114,163 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final events = _filteredEvents();
+    final user = FirebaseService.instance.currentUser ?? FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: GatherColors.background,
       appBar: AppBar(title: const Text('My Tickets')),
-      body: ListView(
+      body: Padding(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-        children: [
-          _buildFilterTabs(),
-          const SizedBox(height: 14),
-          if (events.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 40),
-                child: Text(
-                  'No tickets found',
-                  style: TextStyle(color: GatherColors.textSecondary),
+        child: Column(
+          children: [
+            _buildFilterTabs(),
+            const SizedBox(height: 14),
+            if (user == null)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    'Sign in to view your tickets',
+                    style: TextStyle(color: GatherColors.textSecondary),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: FirebaseService.instance.streamUserBookings(user.uid),
+                  builder: (context, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final items = snap.data ?? [];
+                    if (items.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: Text(
+                            'No tickets found',
+                            style: TextStyle(color: GatherColors.textSecondary),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, idx) {
+                        final item = items[idx];
+                        final event = item['event'] as Map<String, dynamic>?;
+                        final booking = item['booking'] as Map<String, dynamic>?;
+                        final title = event?['title'] as String? ?? 'Event';
+                        final date = event?['date'] as String? ?? '';
+                        final time = event?['time'] as String? ?? '';
+                        final location = event?['location'] as String? ?? '';
+                        final isPast = () {
+                          try {
+                            final parsed = _parseDate(date);
+                            return parsed.isBefore(DateTime.now());
+                          } catch (_) {
+                            return false;
+                          }
+                        }();
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 0),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: GatherColors.withOpacity(Colors.black, .03),
+                                blurRadius: 12,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // thumbnail
+                              Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                    gradient: LinearGradient(colors: _colorsFromEvent(event)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.event, color: Colors.white, size: 30),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: const TextStyle(
+                                        color: GatherColors.textPrimary,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '$date • $time',
+                                      style: const TextStyle(
+                                        color: GatherColors.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      isPast ? 'Past event' : '1 Ticket',
+                                      style: TextStyle(
+                                        color: isPast ? Colors.grey : GatherColors.primary,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // QR and actions
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(
+                                      Icons.qr_code_2_rounded,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  IconButton(
+                                    tooltip: 'Share ticket',
+                                    onPressed: () {},
+                                    icon: const Icon(Icons.ios_share_rounded),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
-            ),
-          ...events.map((event) {
-            final isPast = _parseDate(event.date).isBefore(DateTime.now());
-            return Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: GatherColors.withOpacity(Colors.black, .03),
-                    blurRadius: 12,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // thumbnail
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: event.colors),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.event, color: Colors.white, size: 30),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          event.title,
-                          style: const TextStyle(
-                            color: GatherColors.textPrimary,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${event.date} • ${event.time}',
-                          style: const TextStyle(
-                            color: GatherColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          isPast ? 'Past event' : '1 Ticket',
-                          style: TextStyle(
-                            color: isPast ? Colors.grey : GatherColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // QR and actions
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.qr_code_2_rounded,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      IconButton(
-                        tooltip: 'Share ticket',
-                        onPressed: () {},
-                        icon: const Icon(Icons.ios_share_rounded),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
+          ],
+        ),
       ),
     );
   }

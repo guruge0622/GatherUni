@@ -111,7 +111,11 @@ class FirebaseService {
     required String userId,
     Map<String, dynamic>? meta,
   }) async {
-    final bookingRef = _fs.collection('events').doc(eventId).collection('bookings').doc();
+    final bookingRef = _fs
+        .collection('events')
+        .doc(eventId)
+        .collection('bookings')
+        .doc();
 
     return await _fs.runTransaction((tx) async {
       final eventRef = _fs.collection('events').doc(eventId);
@@ -120,7 +124,9 @@ class FirebaseService {
 
       final eventData = eventSnap.data() ?? <String, dynamic>{};
       final bookingsValue = eventData['bookings'] ?? 0;
-      final currentBookings = (bookingsValue is int) ? bookingsValue : (bookingsValue as num).toInt();
+      final currentBookings = (bookingsValue is int)
+          ? bookingsValue
+          : (bookingsValue as num).toInt();
 
       final bookingData = <String, dynamic>{
         'userId': userId,
@@ -145,7 +151,11 @@ class FirebaseService {
     required String userId,
   }) async {
     await _fs.runTransaction((tx) async {
-      final bookingRef = _fs.collection('events').doc(eventId).collection('bookings').doc(bookingId);
+      final bookingRef = _fs
+          .collection('events')
+          .doc(eventId)
+          .collection('bookings')
+          .doc(bookingId);
       final bookingSnap = await tx.get(bookingRef);
       if (!bookingSnap.exists) throw Exception('Booking not found');
 
@@ -158,15 +168,50 @@ class FirebaseService {
       final eventData = eventSnap.data() ?? <String, dynamic>{};
       final organizerId = eventData['organizerId'] as String?;
 
-      final allowed = (bookingOwner != null && bookingOwner == userId) || (organizerId != null && organizerId == userId);
+      final allowed =
+          (bookingOwner != null && bookingOwner == userId) ||
+          (organizerId != null && organizerId == userId);
       if (!allowed) throw Exception('Not authorized to cancel this booking');
 
       tx.delete(bookingRef);
 
       final bookingsValue = eventData['bookings'] ?? 0;
-      final currentBookings = (bookingsValue is int) ? bookingsValue : (bookingsValue as num).toInt();
+      final currentBookings = (bookingsValue is int)
+          ? bookingsValue
+          : (bookingsValue as num).toInt();
       final next = currentBookings > 0 ? currentBookings - 1 : 0;
       tx.update(eventRef, {'bookings': next});
+    });
+  }
+
+  // Stream all bookings for a user across events (collection group query).
+  // Each item contains: bookingId, eventId, booking (map), event (map)
+  Stream<List<Map<String, dynamic>>> streamUserBookings(String uid) {
+    return _fs
+        .collectionGroup('bookings')
+        .where('userId', isEqualTo: uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .asyncMap((snap) async {
+      final results = await Future.wait(snap.docs.map((doc) async {
+        final booking = doc.data();
+        final bookingId = doc.id;
+        final eventRef = doc.reference.parent.parent;
+        Map<String, dynamic>? eventData;
+        String eventId = '';
+        if (eventRef != null) {
+          final eventSnap = await eventRef.get();
+          eventData = eventSnap.exists ? eventSnap.data() : null;
+          eventId = eventRef.id;
+        }
+        return {
+          'bookingId': bookingId,
+          'eventId': eventId,
+          'booking': booking,
+          'event': eventData,
+        };
+      }));
+      return results;
     });
   }
 }
