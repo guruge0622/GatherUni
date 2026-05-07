@@ -6,6 +6,12 @@ class BookingConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final bookingId = args != null ? args['bookingId'] as String? : null;
+    final event = args != null ? args['event'] as Event? : null;
+    final quantity = args != null ? args['quantity'] as int? : 1;
+    final total = args != null ? args['total'] as num? : null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Booking Confirmed'),
@@ -64,24 +70,34 @@ class BookingConfirmationScreen extends StatelessWidget {
                           ?.copyWith(color: GatherColors.primary),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'College Music Fest',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
+                    if (event != null)
+                      Text(
+                        event.title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      Text(
+                        'Your Event',
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.calendar_today_outlined, size: 16),
-                        SizedBox(width: 8),
-                        Text('May 20, 2025 • 6:00 PM'),
-                        SizedBox(width: 14),
-                        Icon(Icons.location_on_outlined, size: 16),
-                        SizedBox(width: 8),
-                        Text('Main Hall'),
-                      ],
-                    ),
+                    if (event != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, size: 16),
+                          const SizedBox(width: 8),
+                          Text('${event.date} • ${event.time}'),
+                          const SizedBox(width: 14),
+                          const Icon(Icons.location_on_outlined, size: 16),
+                          const SizedBox(width: 8),
+                          Text(event.location),
+                        ],
+                      )
+                    else
+                      const SizedBox.shrink(),
                     const SizedBox(height: 20),
 
                     // QR card
@@ -111,7 +127,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text('Booking ID: GTH-839203'),
+                          Text('Booking ID: ${bookingId ?? '—'}'),
                         ],
                       ),
                     ),
@@ -127,7 +143,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                               const Text('Tickets'),
                               const SizedBox(height: 6),
                               Text(
-                                '2 x General',
+                                '${quantity ?? 1} x General',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ],
@@ -140,7 +156,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                               const Text('Total Paid'),
                               const SizedBox(height: 6),
                               Text(
-                                '\$22.00',
+                                total == null ? '—' : '\$${total.toString()}',
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(color: GatherColors.primary),
                               ),
@@ -181,8 +197,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () =>
-                                Navigator.of(context).pushNamed('/tickets'),
+                            onPressed: () => Navigator.of(context).pushNamed('/tickets'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),

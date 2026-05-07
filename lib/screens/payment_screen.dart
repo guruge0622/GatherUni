@@ -138,25 +138,35 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       if (user == null) {
                         setState(() => _loading = false);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please sign in to continue')),
+                          const SnackBar(
+                            content: Text('Please sign in to continue'),
+                          ),
                         );
                         return;
                       }
 
                       try {
-                        final bookingRef = await FirebaseService.instance.createBookingTransactional(
-                          eventId: event.id,
-                          userId: user.uid,
-                        );
+                        final bookingRef = await FirebaseService.instance
+                            .createBookingTransactional(
+                              eventId: event.id,
+                              userId: user.uid,
+                            );
                         if (!mounted) return;
                         Navigator.of(context).pushReplacementNamed(
                           '/booking-confirmation',
-                          arguments: {'bookingId': bookingRef.id, 'event': event},
+                          arguments: {
+                            'bookingId': bookingRef.id,
+                            'event': event,
+                            'quantity': count,
+                            'total': total,
+                          },
                         );
                       } catch (e) {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Booking failed: ${e.toString()}')),
+                          SnackBar(
+                            content: Text('Booking failed: ${e.toString()}'),
+                          ),
                         );
                       } finally {
                         if (mounted) setState(() => _loading = false);
