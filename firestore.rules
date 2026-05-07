@@ -15,11 +15,29 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if true;
 
+      function isValidEvent(data) {
+        return data.title is string
+          && data.title.size() > 0
+          && data.title.size() <= 300
+          && (data.date is timestamp)
+          && (data.location is string)
+          && data.location.size() <= 300
+          && (data.organizerId is string)
+          && (data.price is number || !('price' in data))
+          && (!('bookings' in data) || (data.bookings is int && data.bookings >= 0))
+          && (!('colors' in data) || (data.colors is list));
+      }
+
       allow create: if request.auth != null
         && request.resource.data.organizerId == request.auth.uid
-        && request.resource.data.keys().hasAll(['title', 'date', 'time', 'location', 'organizerId']);
+        && isValidEvent(request.resource.data)
+        && request.resource.data.keys().hasAny(['title', 'date', 'location', 'organizerId']);
 
-      allow update, delete: if request.auth != null
+      allow update: if request.auth != null
+        && resource.data.organizerId == request.auth.uid
+        && isValidEvent(request.resource.data);
+
+      allow delete: if request.auth != null
         && resource.data.organizerId == request.auth.uid;
 
       // Bookings subcollection is handled below
@@ -27,15 +45,22 @@ service cloud.firestore {
 
     // Bookings per event: only authenticated users may create a booking for themselves.
     match /events/{eventId}/bookings/{bookingId} {
+      function isValidBooking(data) {
+        return data.userId is string
+          && (data.createdAt is timestamp || !('createdAt' in data));
+      }
+
+      // Create: only authenticated users can create bookings for themselves; createdAt must be a timestamp
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.keys().hasAll(['userId', 'createdAt']);
+        && isValidBooking(request.resource.data);
 
-      // Allow booking owners to read/delete; event organizer can read/delete for management
+      // Read: booking owner or event organizer
       allow read: if request.auth != null
         && (resource.data.userId == request.auth.uid
             || get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid);
 
+      // Delete: booking owner or event organizer
       allow delete: if request.auth != null
         && (resource.data.userId == request.auth.uid
             || get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid);
