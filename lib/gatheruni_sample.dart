@@ -52,12 +52,12 @@ class AppHeader extends StatelessWidget {
           Positioned(
             right: 20,
             top: 30,
-            child: _circle(70, Colors.white.withValues(alpha: .7)),
+            child: _circle(70, Colors.white.withOpacity(.7)),
           ),
           Positioned(
             right: 70,
             top: 60,
-            child: _circle(110, Colors.blue.withValues(alpha: .15)),
+            child: _circle(110, Colors.blue.withOpacity(.15)),
           ),
         ],
       ),
@@ -88,7 +88,7 @@ class WhiteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: .05),
+            color: Colors.black.withOpacity(.05),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -380,7 +380,7 @@ class HomeScreen extends StatelessWidget {
           Container(
             height: 90,
             decoration: BoxDecoration(
-              color: primaryBlue.withValues(alpha: .15),
+              color: primaryBlue.withOpacity(.15),
               borderRadius: BorderRadius.circular(14),
             ),
           ),

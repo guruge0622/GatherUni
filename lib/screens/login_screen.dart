@@ -146,9 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               children: [
                 Expanded(
-                  child: Divider(
-                    color: AppColors.inputBorder.withValues(alpha: .45),
-                  ),
+                  child: Divider(color: AppColors.inputBorder.withOpacity(.45)),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
@@ -158,9 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 Expanded(
-                  child: Divider(
-                    color: AppColors.inputBorder.withValues(alpha: .45),
-                  ),
+                  child: Divider(color: AppColors.inputBorder.withOpacity(.45)),
                 ),
               ],
             ),

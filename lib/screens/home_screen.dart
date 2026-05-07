@@ -130,7 +130,7 @@ class HomeScreen extends StatelessWidget {
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: secondary.withValues(alpha: 0.2),
+        color: secondary.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Center(
@@ -158,7 +158,7 @@ class HomeScreen extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
-            colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
+            colors: [Colors.black.withOpacity(0.6), Colors.transparent],
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
           ),

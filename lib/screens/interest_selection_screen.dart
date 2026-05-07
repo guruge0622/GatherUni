@@ -73,7 +73,7 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                     selectedColor: AppColors.primaryBlue,
                     elevation: isSelected ? 6 : 0,
                     pressElevation: 2,
-                    shadowColor: AppColors.primaryBlue.withValues(alpha: .18),
+                    shadowColor: AppColors.primaryBlue.withOpacity(.18),
                     checkmarkColor: Colors.white,
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : AppColors.text,
@@ -85,7 +85,7 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                       side: BorderSide(
                         color: isSelected
                             ? AppColors.primaryBlue
-                            : AppColors.inputBorder.withValues(alpha: .55),
+                            : AppColors.inputBorder.withOpacity(.55),
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(
@@ -99,9 +99,9 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
               ElevatedButton(
                 onPressed: () {
                   updateLocalProfile(interests: selected.toList());
-                  Navigator.of(context).pushReplacementNamed(
-                    '/onboarding/step2',
-                  );
+                  Navigator.of(
+                    context,
+                  ).pushReplacementNamed('/onboarding/step2');
                 },
                 child: const Text('Continue'),
               ),

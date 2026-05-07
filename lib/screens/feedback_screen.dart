@@ -20,10 +20,16 @@ class _FeedbackScreenState extends State<FeedbackScreen>
   String? _category;
   bool _submitting = false;
 
-  late final AnimationController _animCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 700),
-  );
+  late final AnimationController _animCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+  }
 
   Map<FeedbackType, List<String>> get _categories => {
     FeedbackType.general: ['Other', 'UX', 'Content'],

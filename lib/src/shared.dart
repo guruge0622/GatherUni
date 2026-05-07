@@ -16,9 +16,8 @@ class AppColors {
   static const card = Colors.white;
 }
 
-extension ColorWithValues on Color {
-  Color withValues({double alpha = 1.0}) => withAlpha((alpha * 255).round());
-}
+// Removed custom `withValues` extension to avoid clashing with Flutter SDK
+// Use the built-in `withOpacity()` instead where needed.
 
 const interests = ['Academics', 'Arts', 'Cultural', 'Sports', 'Tech'];
 
@@ -264,12 +263,12 @@ class GatherUniLogo extends StatelessWidget {
       height: size,
       padding: EdgeInsets.all(size * .08),
       decoration: BoxDecoration(
-        color: dark ? Colors.white : Colors.white.withValues(alpha: .94),
+        color: dark ? Colors.white : Colors.white.withOpacity(.94),
         borderRadius: BorderRadius.circular(size * .18),
-        border: Border.all(color: Colors.white.withValues(alpha: .35)),
+        border: Border.all(color: Colors.white.withOpacity(.35)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? .08 : .14),
+            color: Colors.black.withOpacity(dark ? .08 : .14),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -386,9 +385,7 @@ class SocialSignInRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Divider(
-                color: AppColors.inputBorder.withValues(alpha: .45),
-              ),
+              child: Divider(color: AppColors.inputBorder.withOpacity(.45)),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
@@ -398,9 +395,7 @@ class SocialSignInRow extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Divider(
-                color: AppColors.inputBorder.withValues(alpha: .45),
-              ),
+              child: Divider(color: AppColors.inputBorder.withOpacity(.45)),
             ),
           ],
         ),
@@ -488,7 +483,7 @@ class AuthBubble extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: .20),
+            color: AppColors.primaryBlue.withOpacity(.20),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -842,8 +837,8 @@ class AuthHeroCard extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primaryBlue.withValues(alpha: .05),
-                  AppColors.primaryBlue.withValues(alpha: .70),
+                  AppColors.primaryBlue.withOpacity(.05),
+                  AppColors.primaryBlue.withOpacity(.70),
                 ],
               ),
             ),
@@ -966,7 +961,7 @@ class AuthScaffold extends StatelessWidget {
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryBlue.withValues(alpha: .10),
+                          color: AppColors.primaryBlue.withOpacity(.10),
                           blurRadius: 34,
                           offset: const Offset(0, 18),
                         ),

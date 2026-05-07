@@ -568,14 +568,57 @@ class _CompletionPage extends StatefulWidget {
 
 class _CompletionPageState extends State<_CompletionPage>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _animation = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..forward();
+  late final AnimationController _animation;
+  late final Animation<double> _scaleAnim;
+  late final Animation<double> _textFade;
+  late final Animation<Offset> _textSlide;
+  late final Animation<double> _circleFade;
+  late final Animation<double> _iconScale;
+  late final Animation<double> _iconFade;
 
   @override
   void initState() {
     super.initState();
+    _animation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _scaleAnim = CurvedAnimation(
+      parent: _animation,
+      curve: const Interval(0.0, 0.45, curve: Curves.elasticOut),
+    );
+
+    _textFade = CurvedAnimation(
+      parent: _animation,
+      curve: const Interval(0.45, 0.75, curve: Curves.easeOut),
+    );
+
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animation,
+            curve: const Interval(0.45, 0.85, curve: Curves.easeOut),
+          ),
+        );
+
+    _circleFade = CurvedAnimation(
+      parent: _animation,
+      curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+    );
+
+    _iconScale = Tween<double>(begin: 0.2, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animation,
+        curve: const Interval(0.35, 0.65, curve: Curves.elasticOut),
+      ),
+    );
+
+    _iconFade = CurvedAnimation(
+      parent: _animation,
+      curve: const Interval(0.35, 0.65, curve: Curves.easeIn),
+    );
+
     _animation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Future.delayed(const Duration(milliseconds: 600), () {
@@ -584,43 +627,9 @@ class _CompletionPageState extends State<_CompletionPage>
         });
       }
     });
+
+    _animation.forward();
   }
-
-  late final Animation<double> _scaleAnim = CurvedAnimation(
-    parent: _animation,
-    curve: const Interval(0.0, 0.45, curve: Curves.elasticOut),
-  );
-
-  late final Animation<double> _textFade = CurvedAnimation(
-    parent: _animation,
-    curve: const Interval(0.45, 0.75, curve: Curves.easeOut),
-  );
-
-  late final Animation<Offset> _textSlide =
-      Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(
-        CurvedAnimation(
-          parent: _animation,
-          curve: const Interval(0.45, 0.85, curve: Curves.easeOut),
-        ),
-      );
-  late final Animation<double> _circleFade = CurvedAnimation(
-    parent: _animation,
-    curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
-  );
-
-  // Icon pop/fade
-  late final Animation<double> _iconScale = Tween<double>(begin: 0.2, end: 1.0)
-      .animate(
-        CurvedAnimation(
-          parent: _animation,
-          curve: const Interval(0.35, 0.65, curve: Curves.elasticOut),
-        ),
-      );
-
-  late final Animation<double> _iconFade = CurvedAnimation(
-    parent: _animation,
-    curve: const Interval(0.35, 0.65, curve: Curves.easeIn),
-  );
 
   @override
   void dispose() {
@@ -781,7 +790,7 @@ class _FormCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE6ECF6)),
         boxShadow: [
           BoxShadow(
-            color: GatherColors.primary.withValues(alpha: .08),
+            color: GatherColors.primary.withOpacity(.08),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -815,7 +824,7 @@ class _PreferenceSwitch extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: GatherColors.primary.withValues(alpha: .10),
+            color: GatherColors.primary.withOpacity(.10),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, color: GatherColors.primary),

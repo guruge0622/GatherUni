@@ -122,8 +122,9 @@ class _ChatScreenState extends State<ChatScreen>
               children: messages.map((msg) {
                 final isUser = msg['role'] == 'user';
                 return Align(
-                  alignment:
-                      isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     padding: const EdgeInsets.all(12),

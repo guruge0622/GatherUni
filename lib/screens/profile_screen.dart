@@ -238,7 +238,7 @@ class _ProfileHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: GatherColors.primary.withValues(alpha: .08),
+            color: GatherColors.primary.withOpacity(.08),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -318,7 +318,7 @@ class _ProfileHeader extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: GatherColors.primary.withValues(alpha: .10),
+                    color: GatherColors.primary.withOpacity(.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

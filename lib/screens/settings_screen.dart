@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
 import '../src/ui/feedback.dart';
 import '../src/backend/firebase_service.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -12,10 +14,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _darkMode = false;
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return ValueListenableBuilder<LocalProfileData>(
       valueListenable: localProfile,
       builder: (context, profile, _) {
@@ -37,12 +39,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.dark_mode_rounded,
-                title: 'Dark Mode',
-                subtitle: 'Reduce glare and save battery',
-                trailing: Switch(
-                  value: _darkMode,
-                  onChanged: (value) => setState(() => _darkMode = value),
+                title: 'Theme',
+                subtitle: 'Appearance: System / Light / Dark',
+                trailing: Text(
+                  themeProvider.themeMode == ThemeMode.system
+                      ? 'System'
+                      : themeProvider.themeMode == ThemeMode.dark
+                      ? 'Dark'
+                      : 'Light',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
+                onTap: () async {
+                  final selected = await showDialog<ThemeMode>(
+                    context: context,
+                    builder: (ctx) {
+                      var current = themeProvider.themeMode;
+                      return AlertDialog(
+                        title: const Text('Choose theme'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: ThemeMode.values.map((m) {
+                            final label = m == ThemeMode.system
+                                ? 'System'
+                                : m == ThemeMode.dark
+                                ? 'Dark'
+                                : 'Light';
+                            return RadioListTile<ThemeMode>(
+                              title: Text(label),
+                              value: m,
+                              groupValue: current,
+                              onChanged: (v) {
+                                Navigator.of(ctx).pop(v);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  );
+                  if (selected != null)
+                    await themeProvider.setThemeMode(selected);
+                },
               ),
               _SettingsTile(
                 icon: Icons.privacy_tip_rounded,
@@ -143,7 +180,7 @@ class _SettingsTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: GatherColors.primary.withValues(alpha: .10),
+              color: GatherColors.primary.withOpacity(.10),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: GatherColors.primary),

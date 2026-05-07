@@ -11,25 +11,36 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..forward();
+  late final AnimationController _ctrl;
+  late final Animation<double> _headerFade;
+  late final Animation<Offset> _headerSlide;
+  late final Animation<double> _listFade;
 
-  late final Animation<double> _headerFade = CurvedAnimation(
-    parent: _ctrl,
-    curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
-  );
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
 
-  late final Animation<Offset> _headerSlide = Tween<Offset>(
-    begin: const Offset(0, -0.12),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.35)));
+    _headerFade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+    );
 
-  late final Animation<double> _listFade = CurvedAnimation(
-    parent: _ctrl,
-    curve: const Interval(0.35, 0.8, curve: Curves.easeOut),
-  );
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, -0.12),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.35)));
+
+    _listFade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.35, 0.8, curve: Curves.easeOut),
+    );
+
+    _ctrl.forward();
+  }
 
   @override
   void dispose() {

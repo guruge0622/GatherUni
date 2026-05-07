@@ -31,6 +31,72 @@ class GatherColors {
   }
 }
 
+  static ThemeData dark() {
+    final base = ThemeData.dark();
+    return base.copyWith(
+      primaryColor: GatherColors.primary,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: base.colorScheme.copyWith(
+        primary: GatherColors.primary,
+        surface: const Color(0xFF1E1E1E),
+        background: const Color(0xFF121212),
+        error: GatherColors.error,
+        onPrimary: GatherColors.white,
+      ),
+      textTheme: _buildDarkTextTheme(base.textTheme),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1E1E1E),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A2A2A)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: GatherColors.primary),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          foregroundColor: GatherColors.white,
+          backgroundColor: GatherColors.primary,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+
+  static TextTheme _buildDarkTextTheme(TextTheme base) {
+    return base.copyWith(
+      headlineLarge: base.headlineLarge?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      titleLarge: base.titleLarge?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: base.bodyLarge?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.white,
+      ),
+      bodyMedium: base.bodyMedium?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.textSecondary.withOpacity(0.85),
+      ),
+    );
+  }
+
 class GatherGradients {
   static const primaryGradient = LinearGradient(
     colors: [GatherColors.primaryLight, GatherColors.primaryDark],
