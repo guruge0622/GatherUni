@@ -12,6 +12,8 @@ pubspec.lock
 
 # Secrets
 .env
+# Firebase service account (do not commit)
+gatheruni-58fa7-firebase-adminsdk-fbsvc-36747f5eea.json
 # Miscellaneous
 *.class
 *.log
