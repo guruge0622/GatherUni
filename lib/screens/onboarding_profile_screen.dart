@@ -378,6 +378,7 @@ class _ProfileInfoPage extends StatelessWidget {
               items: const [
                 DropdownMenuItem(value: 'Student', child: Text('Student')),
                 DropdownMenuItem(value: 'Staff', child: Text('Staff')),
+                DropdownMenuItem(value: 'Organizer', child: Text('Organizer')),
               ],
               onChanged: (v) => updateLocalProfile(role: v ?? 'Student'),
               decoration: const InputDecoration(labelText: 'Role'),

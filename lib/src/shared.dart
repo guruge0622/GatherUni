@@ -628,6 +628,19 @@ class Event {
   }
 }
 
+// Helper to create an ImageProvider for an event `imageUrl` that may be
+// a network URL or a local asset path. Falls back to the app logo if missing.
+ImageProvider eventImageProvider(String? url) {
+  if (url == null || url.isEmpty) {
+    return const AssetImage('assets/images/gatheruni_logo.png');
+  }
+  final lower = url.toLowerCase();
+  if (lower.startsWith('http://') || lower.startsWith('https://')) {
+    return NetworkImage(url);
+  }
+  return AssetImage(url);
+}
+
 const sampleEvents = [
   Event(
     title: 'AI Research Expo',
@@ -670,6 +683,144 @@ const sampleEvents = [
     bookings: 312,
     imageUrl:
         'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=60',
+  ),
+  // Real events provided by user
+  Event(
+    title: 'IEEExreme',
+    category: 'Academics',
+    date: 'June 5, 2026',
+    time: '9:00 AM',
+    location: 'Engineering Auditorium',
+    price: 0,
+    description:
+        'Competitive programming contest organized by IEEE student chapter.',
+    colors: [AppColors.primaryBlue, AppColors.lightBlue],
+    bookings: 84,
+    imageUrl: 'assets/posters/ieeexreme.jpg',
+  ),
+  Event(
+    title: 'IRC',
+    category: 'Academics',
+    date: 'June 10, 2026',
+    time: '2:00 PM',
+    location: 'Conference Room A',
+    price: 0,
+    description:
+        'Industry research conference with invited speakers and poster sessions.',
+    colors: [AppColors.secondaryGreen, AppColors.primaryBlue],
+    bookings: 54,
+    imageUrl: 'assets/posters/irc.jpg',
+  ),
+  Event(
+    title: 'Ananthe',
+    category: 'Arts',
+    date: 'June 12, 2026',
+    time: '7:00 PM',
+    location: 'Auditorium',
+    price: 6,
+    description:
+        'An evening celebrating music and dance by student performers.',
+    colors: [AppColors.secondaryGreen, AppColors.accentYellow],
+    bookings: 120,
+    imageUrl: 'assets/posters/ananthe.png',
+  ),
+  Event(
+    title: 'Mathaka',
+    category: 'Arts',
+    date: 'June 14, 2026',
+    time: '6:00 PM',
+    location: 'Cultural Hall',
+    price: 4,
+    description: 'A showcase of theatrical and spoken-word performances.',
+    colors: [AppColors.accentYellow, AppColors.primaryBlue],
+    bookings: 68,
+    imageUrl: 'assets/posters/mathaka.jpg',
+  ),
+  Event(
+    title: 'Rota',
+    category: 'Arts',
+    date: 'June 16, 2026',
+    time: '8:00 PM',
+    location: 'Open Stage',
+    price: 5,
+    description: 'Live bands and DJ night featuring cultural music mixes.',
+    colors: [AppColors.primaryBlue, AppColors.secondaryGreen],
+    bookings: 94,
+    imageUrl: 'assets/posters/rota.jpg',
+  ),
+  Event(
+    title: "Afur '26",
+    category: 'Cultural',
+    date: 'July 1, 2026',
+    time: '5:00 PM',
+    location: 'Campus Grounds',
+    price: 0,
+    description: 'Community cultural festival celebrating traditions and food.',
+    colors: [AppColors.secondaryGreen, AppColors.lightBlue],
+    bookings: 210,
+    imageUrl: 'assets/posters/afur26.jpg',
+  ),
+  Event(
+    title: 'Awrudu',
+    category: 'Cultural',
+    date: 'July 4, 2026',
+    time: '6:00 PM',
+    location: 'Student Center',
+    price: 0,
+    description:
+        'Traditional new-year celebrations with games and performances.',
+    colors: [AppColors.accentYellow, AppColors.primaryBlue],
+    bookings: 180,
+    imageUrl: 'assets/posters/awrudu.jpg',
+  ),
+  Event(
+    title: 'Pongal',
+    category: 'Cultural',
+    date: 'July 14, 2026',
+    time: '3:00 PM',
+    location: 'Outdoor Pavilion',
+    price: 0,
+    description:
+        'Harvest festival with traditional activities and food stalls.',
+    colors: [AppColors.primaryBlue, AppColors.accentYellow],
+    bookings: 150,
+    imageUrl: 'assets/posters/pongal.jpg',
+  ),
+  Event(
+    title: 'Yeh Jawani',
+    category: 'Cultural',
+    date: 'July 20, 2026',
+    time: '7:30 PM',
+    location: 'Cinema Hall',
+    price: 3,
+    description: 'Film screening and panel discussion with filmmakers.',
+    colors: [AppColors.secondaryGreen, AppColors.primaryBlue],
+    bookings: 98,
+    imageUrl: 'assets/posters/yeh_jawani.jpg',
+  ),
+  Event(
+    title: 'Inter faculty',
+    category: 'Sports',
+    date: 'August 2, 2026',
+    time: '9:00 AM',
+    location: 'Sports Complex',
+    price: 2,
+    description: 'A day of interfaculty sports competitions and activities.',
+    colors: [AppColors.accentYellow, AppColors.secondaryGreen],
+    bookings: 320,
+    imageUrl: 'assets/posters/interfaculty.jpg',
+  ),
+  Event(
+    title: 'Evision 3.0',
+    category: 'Tech',
+    date: 'August 10, 2026',
+    time: '10:00 AM',
+    location: 'Tech Park',
+    price: 10,
+    description: 'Annual tech expo showcasing student projects and startups.',
+    colors: [AppColors.primaryBlue, AppColors.lightBlue],
+    bookings: 412,
+    imageUrl: 'assets/posters/evision3.jpg',
   ),
 ];
 

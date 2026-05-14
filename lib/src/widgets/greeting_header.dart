@@ -44,7 +44,7 @@ class GreetingHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$greeting, $name 👋',
+                  '$greeting, $name ',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -53,10 +53,8 @@ class GreetingHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Find events for you',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: GatherColors.textSecondary,
-                  ),
+                  'Welcome back to GatherUni!',
+                  style: TextStyle(fontSize: 14, color: color.withOpacity(0.8)),
                 ),
               ],
             ),

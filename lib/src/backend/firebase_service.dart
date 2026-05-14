@@ -84,6 +84,15 @@ class FirebaseService {
         .snapshots();
   }
 
+  /// Stream all events in the `events` collection. Useful for public feeds
+  /// such as the home screen. Ordering is by creation time by default.
+  Stream<QuerySnapshot<Map<String, dynamic>>> streamAllEvents() {
+    return _fs
+        .collection('events')
+        .orderBy('bookings', descending: true)
+        .snapshots();
+  }
+
   Future<List<Map<String, dynamic>>> fetchUserEventsOnce(String uid) async {
     final snap = await _fs
         .collection('events')

@@ -85,6 +85,7 @@ flutter:
     - assets/icons/google.svg
     - assets/sample_events.json
     - assets/sample_tickets.json
+    - assets/posters/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

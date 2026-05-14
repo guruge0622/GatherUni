@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
 import '../src/shared.dart';
 import '../src/widgets/greeting_header.dart';
+import '../src/backend/firebase_service.dart';
 import 'event_detail_screen.dart';
 import 'chatbot_v2_screen.dart';
 import '../services/chat_service.dart';
@@ -30,6 +33,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
 
   String? _selectedCategory;
   final Set<String> _savedEventIds = {};
+  List<Event> _liveEvents = [];
+  StreamSubscription? _eventsSub;
 
   static const _savedKey = 'savedEvents.v1';
 
@@ -37,6 +42,13 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
   void initState() {
     super.initState();
     _loadSaved();
+    // Subscribe to live events from Firestore
+    _eventsSub = FirebaseService.instance.streamAllEvents().listen((snap) {
+      final events = snap.docs
+          .map((d) => Event.fromMap({'id': d.id, ...d.data()}))
+          .toList();
+      if (mounted) setState(() => _liveEvents = events);
+    });
     _startFeaturedAutoScroll();
     _pulseController = AnimationController(
       vsync: this,
@@ -72,9 +84,37 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
     _persistSaved();
   }
 
-  void _shareEvent(Event e) {
-    final txt = '${e.title} — ${e.date} at ${e.location}';
-    Share.share(txt);
+  Future<void> _shareEvent(Event e) async {
+    final buffer = StringBuffer();
+    buffer.writeln('${e.title} — ${e.date} at ${e.location}');
+    if (e.description.isNotEmpty) buffer.writeln('\n${e.description}');
+    if (e.id.isNotEmpty) {
+      buffer.writeln('\nOpen in app: https://gatheruni.app/events/${e.id}');
+    }
+
+    // If there's a poster URL, try to download and share it as a file.
+    if (e.imageUrl != null && e.imageUrl!.isNotEmpty) {
+      try {
+        final uri = Uri.tryParse(e.imageUrl!);
+        if (uri != null) {
+          final resp = await http.get(uri);
+          if (resp.statusCode == 200) {
+            final bytes = resp.bodyBytes;
+            final filename = uri.pathSegments.isNotEmpty
+                ? uri.pathSegments.last
+                : '${e.id.isNotEmpty ? e.id : 'poster'}.jpg';
+            final file = File('${Directory.systemTemp.path}/$filename');
+            await file.writeAsBytes(bytes, flush: true);
+            await Share.shareFiles([file.path], text: buffer.toString());
+            return;
+          }
+        }
+      } catch (_) {
+        // ignore and fallback to text share
+      }
+    }
+
+    Share.share(buffer.toString());
   }
 
   void _startFeaturedAutoScroll() {
@@ -100,6 +140,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
 
   @override
   void dispose() {
+    _eventsSub?.cancel();
     _featuredTimer?.cancel();
     _pulseController.dispose();
     _hintTimer?.cancel();
@@ -108,7 +149,21 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
     super.dispose();
   }
 
-  List<Event> get _combined => [...sampleEvents, ...userEvents.value];
+  List<Event> get _combined {
+    final base = _liveEvents.isEmpty ? sampleEvents : _liveEvents;
+    // merge with userEvents but avoid duplicates by id
+    final merged = List<Event>.from(base);
+    for (final e in userEvents.value) {
+      if (e.id.isEmpty) {
+        // local-only event (no remote id) — keep it
+        merged.insert(0, e);
+        continue;
+      }
+      final exists = merged.any((me) => me.id == e.id);
+      if (!exists) merged.insert(0, e);
+    }
+    return merged;
+  }
 
   List<Event> get _featured =>
       List<Event>.from(_combined)
@@ -168,21 +223,39 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
       ).push(MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
       child: Container(
         margin: const EdgeInsets.only(right: 12, top: 6, bottom: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          image: e.imageUrl != null
-              ? DecorationImage(
-                  image: NetworkImage(e.imageUrl!),
-                  fit: BoxFit.cover,
-                )
-              : null,
-          gradient: e.imageUrl == null
-              ? LinearGradient(colors: e.colors)
-              : null,
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         child: Stack(
           children: [
-            if (e.imageUrl != null)
+            // Poster image (asset or network). Use Image with errorBuilder so
+            // missing assets or load failures gracefully show the gradient.
+            if (e.imageUrl != null && e.imageUrl!.isNotEmpty)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image(
+                    image: eventImageProvider(e.imageUrl),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: e.colors),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              )
+            else
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(colors: e.colors),
+                  ),
+                ),
+              ),
+            // Dark overlay when image is present
+            if (e.imageUrl != null && e.imageUrl!.isNotEmpty)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -265,11 +338,20 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
             child: e.imageUrl != null
-                ? Image.network(
-                    e.imageUrl!,
+                ? Image(
+                    image: eventImageProvider(e.imageUrl),
                     width: double.infinity,
                     height: 110,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 110,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: e.colors),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.event, color: Colors.white, size: 48),
+                      ),
+                    ),
                   )
                 : Container(
                     height: 110,
@@ -449,10 +531,6 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
                               color: AppColors.text,
                             ),
                           ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text('View all'),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -489,8 +567,10 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
                           ),
                         ),
                         TextButton(
-                          onPressed: () =>
-                              Navigator.of(context).pushNamed('/upcoming'),
+                          onPressed: () => Navigator.of(context).pushNamed(
+                            '/upcoming',
+                            arguments: _selectedCategory,
+                          ),
                           child: const Text('View all'),
                         ),
                       ],
@@ -532,11 +612,30 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
                                             8,
                                           ),
                                           child: e.imageUrl != null
-                                              ? Image.network(
-                                                  e.imageUrl!,
+                                              ? Image(
+                                                  image: eventImageProvider(
+                                                    e.imageUrl,
+                                                  ),
                                                   width: 64,
                                                   height: 64,
                                                   fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) => Container(
+                                                        width: 64,
+                                                        height: 64,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                              gradient:
+                                                                  LinearGradient(
+                                                                    colors: e
+                                                                        .colors,
+                                                                  ),
+                                                            ),
+                                                      ),
                                                 )
                                               : Container(
                                                   width: 64,
@@ -674,6 +773,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
                 ],
               ),
             ),
+            // (dev importer removed)
           ],
         ),
       ),

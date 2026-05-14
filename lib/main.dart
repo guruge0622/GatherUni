@@ -36,6 +36,7 @@ import 'services/chat_service.dart';
 import 'screens/create_event_screen.dart';
 import 'screens/event_preview_screen.dart';
 import 'screens/organizer_dashboard_screen.dart';
+import 'screens/upcoming_events_screen.dart';
 
 Future<void> main() async {
   // Run initialization inside the same zone as runApp to avoid zone mismatch warnings
@@ -180,6 +181,10 @@ class GatherUniApp extends StatelessWidget {
         '/notifications': (_) => const NotificationsScreen(),
         '/recommended': (_) => const RecommendedEventsScreen(),
         '/events': (_) => const EventListingScreen(),
+        '/upcoming': (ctx) {
+          final arg = ModalRoute.of(ctx)!.settings.arguments as String?;
+          return UpcomingEventsScreen(category: arg);
+        },
         '/privacy': (_) => const PrivacyPolicyScreen(),
         '/terms': (_) => const TermsScreen(),
         '/support': (_) => const HelpSupportScreen(),

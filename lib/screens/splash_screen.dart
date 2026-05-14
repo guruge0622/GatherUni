@@ -179,24 +179,7 @@ class _SplashScreenState extends State<SplashScreen>
                   position: _textSlide,
                   child: FadeTransition(
                     opacity: _textFade,
-                    child: Column(
-                      children: const [
-                        Text(
-                          'GATHERUNI',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Smart University Event Discovery & Ticketing',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.white70),
-                        ),
-                      ],
-                    ),
+                    child: SizedBox.shrink(),
                   ),
                 ),
                 const SizedBox(height: 20),
