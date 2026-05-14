@@ -1,0 +1,40 @@
+{
+  "tickets": [
+    {
+      "id": "tkt-001",
+      "qrData": "TICKET|tkt-001|Alice|evt-acad-ieeex|2026-05-01T12:00:00Z",
+      "userName": "Alice",
+      "eventId": "evt-acad-ieeex",
+      "eventTitle": "IEEExtreme",
+      "eventDate": "2026-10-01",
+      "location": "Main Auditorium",
+      "isPaid": false,
+      "price": 0.0,
+      "purchaseTimestamp": "2026-05-01T12:00:00Z"
+    },
+    {
+      "id": "tkt-002",
+      "qrData": "TICKET|tkt-002|Bob|evt-tech-evision30|2026-06-01T09:30:00Z",
+      "userName": "Bob",
+      "eventId": "evt-tech-evision30",
+      "eventTitle": "Evision 3.0",
+      "eventDate": "2026-07-18",
+      "location": "Innovation Hub",
+      "isPaid": true,
+      "price": 500.0,
+      "purchaseTimestamp": "2026-06-01T09:30:00Z"
+    },
+    {
+      "id": "tkt-003",
+      "qrData": "TICKET|tkt-003|Carol|evt-social-awrudu|2026-04-01T08:00:00Z",
+      "userName": "Carol",
+      "eventId": "evt-social-awrudu",
+      "eventTitle": "Awrudu",
+      "eventDate": "2026-04-13",
+      "location": "Campus Grounds",
+      "isPaid": false,
+      "price": 0.0,
+      "purchaseTimestamp": "2026-04-01T08:00:00Z"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/src/theme/design_system.dart';
 
 void main() {
   runApp(const GatherUniApp());
@@ -52,12 +53,12 @@ class AppHeader extends StatelessWidget {
           Positioned(
             right: 20,
             top: 30,
-            child: _circle(70, Colors.white.withOpacity(.7)),
+            child: _circle(70, GatherColors.withOpacity(Colors.white, .7)),
           ),
           Positioned(
             right: 70,
             top: 60,
-            child: _circle(110, Colors.blue.withOpacity(.15)),
+            child: _circle(110, GatherColors.withOpacity(Colors.blue, .15)),
           ),
         ],
       ),
@@ -88,7 +89,7 @@ class WhiteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: GatherColors.withOpacity(Colors.black, .05),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),

@@ -1,0 +1,103 @@
+{
+  "events": [
+    {
+      "id": "evt-acad-ieeex",
+      "title": "IEEExtreme",
+      "category": "Academic & Professional",
+      "date": "2026-10-01",
+      "location": "Main Auditorium",
+      "description": "24-hour global programming competition for student teams.",
+      "tags": ["programming","competition"]
+    },
+    {
+      "id": "evt-acad-irc",
+      "title": "IRC",
+      "category": "Academic & Professional",
+      "date": "2026-11-12",
+      "location": "Conference Hall A",
+      "description": "International research conference showcasing student projects.",
+      "tags": ["conference","research"]
+    },
+    {
+      "id": "evt-arts-ananthe",
+      "title": "Ananthe",
+      "category": "Arts & Entertainment",
+      "date": "2026-03-20",
+      "location": "Arts Centre",
+      "description": "Music and dance festival celebrating creative arts.",
+      "tags": ["music","dance"]
+    },
+    {
+      "id": "evt-arts-mathaka",
+      "title": "Mathaka",
+      "category": "Arts & Entertainment",
+      "date": "2026-04-05",
+      "location": "Open Stage",
+      "description": "Live performances and spoken word showcase.",
+      "tags": ["performance","poetry"]
+    },
+    {
+      "id": "evt-arts-rota",
+      "title": "Rota",
+      "category": "Arts & Entertainment",
+      "date": "2026-05-14",
+      "location": "Gallery Hall",
+      "description": "Experimental theatre and short plays.",
+      "tags": ["theatre","plays"]
+    },
+    {
+      "id": "evt-social-afur26",
+      "title": "Afur '26",
+      "category": "Social & Cultural",
+      "date": "2026-08-01",
+      "location": "Student Lawn",
+      "description": "Cultural night with food stalls, music and dance.",
+      "tags": ["culture","festival"]
+    },
+    {
+      "id": "evt-social-awrudu",
+      "title": "Awrudu",
+      "category": "Social & Cultural",
+      "date": "2026-04-13",
+      "location": "Campus Grounds",
+      "description": "Traditional new year celebrations and games.",
+      "tags": ["tradition","celebration"]
+    },
+    {
+      "id": "evt-social-pongal",
+      "title": "Pongal",
+      "category": "Social & Cultural",
+      "date": "2026-01-15",
+      "location": "Cultural Pavilion",
+      "description": "Harvest festival with community events and food.",
+      "tags": ["festival","food"]
+    },
+    {
+      "id": "evt-social-yehjawani",
+      "title": "Yeh Jawani",
+      "category": "Social & Cultural",
+      "date": "2026-06-10",
+      "location": "City Hall",
+      "description": "Youth talent showcase and social mixer.",
+      "tags": ["youth","talent"]
+    },
+    {
+      "id": "evt-sports-interfaculty",
+      "title": "Inter Faculty",
+      "category": "Sports & Fitness",
+      "date": "2026-09-02",
+      "location": "Sports Complex",
+      "description": "Inter-faculty sports tournament across multiple disciplines.",
+      "tags": ["sports","tournament"]
+    },
+    {
+      "id": "evt-tech-evision30",
+      "title": "Evision 3.0",
+      "category": "Tech & Innovation",
+      "date": "2026-07-18",
+      "location": "Innovation Hub",
+      "description": "Tech expo with hackathons, workshops and demos.",
+      "tags": ["tech","hackathon"]
+    }
+  ]
+}

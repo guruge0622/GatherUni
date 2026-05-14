@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:add_2_calendar/add_2_calendar.dart';
+import 'package:add_2_calendar/add_2_calendar.dart' as add2;
 import 'package:intl/intl.dart';
 import '../src/theme/design_system.dart';
+import '../src/shared.dart' as app_shared;
 
-class BookingConfirmationScreen extends StatelessWidget {
+class BookingConfirmationScreen extends StatefulWidget {
   const BookingConfirmationScreen({super.key});
 
+  @override
+  State<BookingConfirmationScreen> createState() =>
+      _BookingConfirmationScreenState();
+}
+
+class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   @override
   Widget build(BuildContext context) {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final bookingId = args != null ? args['bookingId'] as String? : null;
-    final event = args != null ? args['event'] as Event? : null;
+    final appEvent = args != null ? args['event'] as app_shared.Event? : null;
     final quantity = args != null ? args['quantity'] as int? : 1;
     final total = args != null ? args['total'] as num? : null;
 
@@ -73,9 +80,9 @@ class BookingConfirmationScreen extends StatelessWidget {
                           ?.copyWith(color: GatherColors.primary),
                     ),
                     const SizedBox(height: 8),
-                    if (event != null)
+                    if (appEvent != null)
                       Text(
-                        event.title,
+                        appEvent.title,
                         style: Theme.of(context).textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       )
@@ -86,17 +93,17 @@ class BookingConfirmationScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     const SizedBox(height: 12),
-                    if (event != null)
+                    if (appEvent != null)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.calendar_today_outlined, size: 16),
                           const SizedBox(width: 8),
-                          Text('${event.date} • ${event.time}'),
+                          Text('${appEvent.date} • ${appEvent.time}'),
                           const SizedBox(width: 14),
                           const Icon(Icons.location_on_outlined, size: 16),
                           const SizedBox(width: 8),
-                          Text(event.location),
+                          Text(appEvent.location),
                         ],
                       )
                     else
@@ -174,42 +181,56 @@ class BookingConfirmationScreen extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () async {
-                                  // Try to build a sensible start/end time from event data
-                                  DateTime start;
-                                  try {
-                                    start = DateFormat('MMMM d, yyyy h:mm a').parseLoose('${event?.date ?? ''} ${event?.time ?? ''}');
-                                  } catch (_) {
-                                    try {
-                                      start = DateFormat('MMM d, yyyy h:mm a').parseLoose('${event?.date ?? ''} ${event?.time ?? ''}');
-                                    } catch (_) {
-                                      start = DateTime.now().add(const Duration(days: 1));
-                                    }
-                                  }
-                                  final end = start.add(const Duration(hours: 2));
-
-                                  final calEvent = Event(
-                                    title: event?.title ?? 'Event',
-                                    description: event?.description ?? '',
-                                    location: event?.location ?? '',
-                                    startDate: start,
-                                    endDate: end,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              // Try to build a sensible start/end time from event data
+                              DateTime start;
+                              try {
+                                start = DateFormat('MMMM d, yyyy h:mm a')
+                                    .parseLoose(
+                                      '${appEvent?.date ?? ''} ${appEvent?.time ?? ''}',
+                                    );
+                              } catch (_) {
+                                try {
+                                  start = DateFormat('MMM d, yyyy h:mm a')
+                                      .parseLoose(
+                                        '${appEvent?.date ?? ''} ${appEvent?.time ?? ''}',
+                                      );
+                                } catch (_) {
+                                  start = DateTime.now().add(
+                                    const Duration(days: 1),
                                   );
+                                }
+                              }
+                              final end = start.add(const Duration(hours: 2));
 
-                                  try {
-                                    await Add2Calendar.addEvent2Cal(calEvent);
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Added to calendar')),
-                                    );
-                                  } catch (e) {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Failed to add calendar event: ${e.toString()}')),
-                                    );
-                                  }
-                                },
+                              final calEvent = add2.Event(
+                                title: appEvent?.title ?? 'Event',
+                                description: appEvent?.description ?? '',
+                                location: appEvent?.location ?? '',
+                                startDate: start,
+                                endDate: end,
+                              );
+
+                              try {
+                                await add2.Add2Calendar.addEvent2Cal(calEvent);
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Added to calendar'),
+                                  ),
+                                );
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Failed to add calendar event: ${e.toString()}',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                             icon: const Icon(Icons.calendar_month_outlined),
                             label: const Text('Add to Calendar'),
                             style: ElevatedButton.styleFrom(

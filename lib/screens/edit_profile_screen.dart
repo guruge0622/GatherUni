@@ -53,6 +53,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Profile saved')));
+
+    if (_role == 'Organizer') {
+      Navigator.of(context).pushReplacementNamed('/organizer/create');
+      return;
+    }
+
     Navigator.of(context).maybePop();
   }
 

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../src/shared.dart';
 import '../src/ui/feedback.dart';
 import '../src/theme/design_system.dart';
+import '../src/backend/firebase_service.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -26,6 +31,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _end;
   bool _isOnline = false;
   bool _isPaid = false;
+  File? _poster;
+  final _picker = ImagePicker();
 
   @override
   void didChangeDependencies() {
@@ -73,8 +80,70 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     setState(() => isStart ? _start = dt : _end = dt);
   }
 
+  Future<void> _pickPoster() async {
+    final img = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 80,
+    );
+    if (img == null) return;
+    setState(() => _poster = File(img.path));
+  }
+
   Future<void> _saveDraft() async {
     final id = _editing?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
+    String? imageUrl = _editing?.imageUrl;
+    String? uid = FirebaseService.instance.currentUser?.uid;
+
+    // Upload poster if provided. Require signed-in user to upload.
+    if (_poster != null) {
+      if (uid == null) {
+        // Try anonymous sign-in as a fallback so uploads can proceed.
+        try {
+          UIFeedback.showLoading(context, message: 'Signing in anonymously...');
+          await FirebaseService.instance.signInAnonymously();
+          uid = FirebaseService.instance.currentUser?.uid;
+        } catch (err) {
+          UIFeedback.hideLoading(context);
+          UIFeedback.showSnack(
+            context,
+            'Failed to sign in: ${err.toString()}',
+            success: false,
+          );
+          return;
+        } finally {
+          if (mounted) UIFeedback.hideLoading(context);
+        }
+
+        if (uid == null) {
+          UIFeedback.showSnack(
+            context,
+            'Could not obtain user id for upload',
+            success: false,
+          );
+          return;
+        }
+      }
+
+      try {
+        UIFeedback.showLoading(context, message: 'Uploading poster...');
+        imageUrl = await FirebaseService.instance.uploadImage(
+          _poster!,
+          'posters/$uid/$id.jpg',
+        );
+      } catch (err) {
+        UIFeedback.hideLoading(context);
+        UIFeedback.showSnack(
+          context,
+          'Failed to upload poster: ${err.toString()}',
+          success: false,
+        );
+        return;
+      } finally {
+        if (mounted) UIFeedback.hideLoading(context);
+      }
+    }
+
     final e = Event(
       id: id,
       title: _title.text.trim(),
@@ -90,6 +159,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       organizer: localProfile.value.organizationName.isEmpty
           ? localProfile.value.fullName
           : localProfile.value.organizationName,
+      imageUrl: imageUrl,
     );
 
     try {
@@ -116,6 +186,58 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   Future<void> _publish() async {
     final id = _editing?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
+    String? imageUrl = _editing?.imageUrl;
+    String? uid = FirebaseService.instance.currentUser?.uid;
+
+    // Upload poster if provided. Require signed-in user to upload.
+    if (_poster != null) {
+      if (uid == null) {
+        // Try anonymous sign-in as a fallback so uploads can proceed.
+        try {
+          UIFeedback.showLoading(context, message: 'Signing in anonymously...');
+          await FirebaseService.instance.signInAnonymously();
+          uid = FirebaseService.instance.currentUser?.uid;
+        } catch (err) {
+          UIFeedback.hideLoading(context);
+          UIFeedback.showSnack(
+            context,
+            'Failed to sign in: ${err.toString()}',
+            success: false,
+          );
+          return;
+        } finally {
+          if (mounted) UIFeedback.hideLoading(context);
+        }
+
+        if (uid == null) {
+          UIFeedback.showSnack(
+            context,
+            'Could not obtain user id for upload',
+            success: false,
+          );
+          return;
+        }
+      }
+
+      try {
+        UIFeedback.showLoading(context, message: 'Uploading poster...');
+        imageUrl = await FirebaseService.instance.uploadImage(
+          _poster!,
+          'posters/$uid/$id.jpg',
+        );
+      } catch (err) {
+        UIFeedback.hideLoading(context);
+        UIFeedback.showSnack(
+          context,
+          'Failed to upload poster: ${err.toString()}',
+          success: false,
+        );
+        return;
+      } finally {
+        if (mounted) UIFeedback.hideLoading(context);
+      }
+    }
+
     final e = Event(
       id: id,
       title: _title.text.trim(),
@@ -131,6 +253,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       organizer: localProfile.value.organizationName.isEmpty
           ? localProfile.value.fullName
           : localProfile.value.organizationName,
+      imageUrl: imageUrl,
     );
 
     try {
@@ -172,6 +295,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       organizer: localProfile.value.organizationName.isEmpty
           ? localProfile.value.fullName
           : localProfile.value.organizationName,
+      imageUrl: _editing?.imageUrl,
     );
     Navigator.of(context).pushNamed('/organizer/preview', arguments: e);
   }
@@ -190,6 +314,49 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 title: 'Basic Info',
                 child: Column(
                   children: [
+                    GestureDetector(
+                      onTap: _pickPoster,
+                      child: Container(
+                        width: double.infinity,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE6ECF6)),
+                        ),
+                        child: _poster != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  _poster!,
+                                  width: double.infinity,
+                                  height: 140,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : _editing?.imageUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  _editing!.imageUrl!,
+                                  width: double.infinity,
+                                  height: 140,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.photo_camera_outlined, size: 32),
+                                    SizedBox(height: 8),
+                                    Text('Tap to add event poster'),
+                                  ],
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _title,
                       decoration: const InputDecoration(

@@ -169,12 +169,30 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
       child: Container(
         margin: const EdgeInsets.only(right: 12, top: 6, bottom: 6),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: e.colors),
           borderRadius: BorderRadius.circular(16),
+          image: e.imageUrl != null
+              ? DecorationImage(
+                  image: NetworkImage(e.imageUrl!),
+                  fit: BoxFit.cover,
+                )
+              : null,
+          gradient: e.imageUrl == null
+              ? LinearGradient(colors: e.colors)
+              : null,
         ),
         child: Stack(
           children: [
-            Positioned.fill(child: Container()),
+            if (e.imageUrl != null)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.black.withOpacity(0.28),
+                  ),
+                ),
+              )
+            else
+              Positioned.fill(child: Container()),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -244,17 +262,24 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 110,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: e.colors),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(14),
-              ),
-            ),
-            child: const Center(
-              child: Icon(Icons.event, color: Colors.white, size: 48),
-            ),
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            child: e.imageUrl != null
+                ? Image.network(
+                    e.imageUrl!,
+                    width: double.infinity,
+                    height: 110,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    height: 110,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: e.colors),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.event, color: Colors.white, size: 48),
+                    ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -502,17 +527,26 @@ class _ModernHomeScreenState extends State<ModernHomeScreen>
                                     ),
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: 64,
-                                          height: 64,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: e.colors,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
+                                          child: e.imageUrl != null
+                                              ? Image.network(
+                                                  e.imageUrl!,
+                                                  width: 64,
+                                                  height: 64,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  width: 64,
+                                                  height: 64,
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: e.colors,
+                                                    ),
+                                                  ),
+                                                ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(

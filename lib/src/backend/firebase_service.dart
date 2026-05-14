@@ -46,6 +46,16 @@ class FirebaseService {
     }
   }
 
+  /// Sign in anonymously (used as a fallback for uploads when user isn't signed in).
+  Future<UserCredential> signInAnonymously() async {
+    final cred = await _auth.signInAnonymously();
+    final uid = _auth.currentUser?.uid;
+    // Log uid for debugging upload fallback
+    // ignore: avoid_print
+    print('FirebaseService: signed in anonymously, uid=$uid');
+    return cred;
+  }
+
   Future<void> signOut() async {
     await GoogleSignIn().signOut();
     await _auth.signOut();
@@ -193,25 +203,27 @@ class FirebaseService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .asyncMap((snap) async {
-      final results = await Future.wait(snap.docs.map((doc) async {
-        final booking = doc.data();
-        final bookingId = doc.id;
-        final eventRef = doc.reference.parent.parent;
-        Map<String, dynamic>? eventData;
-        String eventId = '';
-        if (eventRef != null) {
-          final eventSnap = await eventRef.get();
-          eventData = eventSnap.exists ? eventSnap.data() : null;
-          eventId = eventRef.id;
-        }
-        return {
-          'bookingId': bookingId,
-          'eventId': eventId,
-          'booking': booking,
-          'event': eventData,
-        };
-      }));
-      return results;
-    });
+          final results = await Future.wait(
+            snap.docs.map((doc) async {
+              final booking = doc.data();
+              final bookingId = doc.id;
+              final eventRef = doc.reference.parent.parent;
+              Map<String, dynamic>? eventData;
+              String eventId = '';
+              if (eventRef != null) {
+                final eventSnap = await eventRef.get();
+                eventData = eventSnap.exists ? eventSnap.data() : null;
+                eventId = eventRef.id;
+              }
+              return {
+                'bookingId': bookingId,
+                'eventId': eventId,
+                'booking': booking,
+                'event': eventData,
+              };
+            }),
+          );
+          return results;
+        });
   }
 }

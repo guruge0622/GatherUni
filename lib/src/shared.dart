@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:my_app/src/theme/design_system.dart';
 import 'package:my_app/src/backend/firebase_service.dart';
 
 class AppColors {
@@ -225,8 +226,9 @@ void updateLocalProfile({
 
   // If authenticated, also persist profile to Firestore (merge)
   try {
-    final uid = FirebaseService.instance.currentUser?.uid;
-    if (uid != null) {
+    final user = FirebaseService.instance.currentUser;
+    if (user != null && !user.isAnonymous) {
+      final uid = user.uid;
       final profileMap = {
         'fullName': localProfile.value.fullName,
         'email': localProfile.value.email,
@@ -263,12 +265,14 @@ class GatherUniLogo extends StatelessWidget {
       height: size,
       padding: EdgeInsets.all(size * .08),
       decoration: BoxDecoration(
-        color: dark ? Colors.white : Colors.white.withOpacity(.94),
+        color: dark
+            ? Colors.white
+            : GatherColors.withOpacity(Colors.white, .94),
         borderRadius: BorderRadius.circular(size * .18),
-        border: Border.all(color: Colors.white.withOpacity(.35)),
+        border: Border.all(color: GatherColors.withOpacity(Colors.white, .35)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(dark ? .08 : .14),
+            color: GatherColors.withOpacity(Colors.black, dark ? .08 : .14),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -385,7 +389,9 @@ class SocialSignInRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Divider(color: AppColors.inputBorder.withOpacity(.45)),
+              child: Divider(
+                color: GatherColors.withOpacity(AppColors.inputBorder, .45),
+              ),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
@@ -395,7 +401,9 @@ class SocialSignInRow extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Divider(color: AppColors.inputBorder.withOpacity(.45)),
+              child: Divider(
+                color: GatherColors.withOpacity(AppColors.inputBorder, .45),
+              ),
             ),
           ],
         ),
@@ -483,7 +491,7 @@ class AuthBubble extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(.20),
+            color: GatherColors.withOpacity(AppColors.primaryBlue, .20),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -837,8 +845,8 @@ class AuthHeroCard extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primaryBlue.withOpacity(.05),
-                  AppColors.primaryBlue.withOpacity(.70),
+                  GatherColors.withOpacity(AppColors.primaryBlue, .05),
+                  GatherColors.withOpacity(AppColors.primaryBlue, .70),
                 ],
               ),
             ),
@@ -961,7 +969,10 @@ class AuthScaffold extends StatelessWidget {
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryBlue.withOpacity(.10),
+                          color: GatherColors.withOpacity(
+                            AppColors.primaryBlue,
+                            .10,
+                          ),
                           blurRadius: 34,
                           offset: const Offset(0, 18),
                         ),

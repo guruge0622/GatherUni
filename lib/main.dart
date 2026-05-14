@@ -103,7 +103,7 @@ class _MainShellState extends State<MainShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) => setState(() => currentIndex = index),
-        indicatorColor: GatherColors.primary.withOpacity(.12),
+        indicatorColor: GatherColors.withOpacity(GatherColors.primary, .12),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

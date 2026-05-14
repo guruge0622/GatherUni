@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 class GatherColors {
-  // Updated palette from user
-  static const background = Color(0xFFF0F3FA); // #F0F3FA
-  static const softBlue = Color(0xFFD5DEEF); // #D5DEEF
-  static const lightBlue = Color(0xFFB1C9EF); // #B1C9EF
-  static const midBlue = Color(0xFF8AAEE0); // #8AAEE0 (corrected)
-  static const coolBlue = Color(0xFF628ECB); // #628ECB
-  static const primary = Color(0xFF395886); // #395886 (brand primary)
+  const GatherColors._();
+
+  static const background = Color(0xFFF0F3FA);
+  static const softBlue = Color(0xFFD5DEEF);
+  static const lightBlue = Color(0xFFB1C9EF);
+  static const midBlue = Color(0xFF8AAEE0);
+  static const coolBlue = Color(0xFF628ECB);
+  static const primary = Color(0xFF395886);
   static const primaryLight = lightBlue;
   static const primaryDark = midBlue;
   static const dark = Color(0xFF171D35);
@@ -21,83 +22,16 @@ class GatherColors {
   // Helper to create a color with opacity without using deprecated withOpacity
   static Color withOpacity(Color color, double opacity) {
     final a = (opacity * 255).round().clamp(0, 255);
-    // value accessor may be deprecated in some SDKs; ignore deprecation here
-    // ignore: deprecated_member_use
-    final v = color.value;
-    final r = (v >> 16) & 0xFF;
-    final g = (v >> 8) & 0xFF;
-    final b = v & 0xFF;
+    final r = color.red;
+    final g = color.green;
+    final b = color.blue;
     return Color.fromARGB(a, r, g, b);
   }
 }
 
-  static ThemeData dark() {
-    final base = ThemeData.dark();
-    return base.copyWith(
-      primaryColor: GatherColors.primary,
-      scaffoldBackgroundColor: const Color(0xFF121212),
-      colorScheme: base.colorScheme.copyWith(
-        primary: GatherColors.primary,
-        surface: const Color(0xFF1E1E1E),
-        background: const Color(0xFF121212),
-        error: GatherColors.error,
-        onPrimary: GatherColors.white,
-      ),
-      textTheme: _buildDarkTextTheme(base.textTheme),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: const Color(0xFF1E1E1E),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2A2A2A)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: GatherColors.primary),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          foregroundColor: GatherColors.white,
-          backgroundColor: GatherColors.primary,
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-
-  static TextTheme _buildDarkTextTheme(TextTheme base) {
-    return base.copyWith(
-      headlineLarge: base.headlineLarge?.copyWith(
-        fontFamily: 'Poppins',
-        color: GatherColors.white,
-        fontWeight: FontWeight.w700,
-      ),
-      titleLarge: base.titleLarge?.copyWith(
-        fontFamily: 'Poppins',
-        color: GatherColors.white,
-        fontWeight: FontWeight.w600,
-      ),
-      bodyLarge: base.bodyLarge?.copyWith(
-        fontFamily: 'Poppins',
-        color: GatherColors.white,
-      ),
-      bodyMedium: base.bodyMedium?.copyWith(
-        fontFamily: 'Poppins',
-        color: GatherColors.textSecondary.withOpacity(0.85),
-      ),
-    );
-  }
-
 class GatherGradients {
+  const GatherGradients._();
+
   static const primaryGradient = LinearGradient(
     colors: [GatherColors.primaryLight, GatherColors.primaryDark],
     begin: Alignment.topLeft,
@@ -112,6 +46,8 @@ class GatherGradients {
 }
 
 class GatherTheme {
+  const GatherTheme._();
+
   static ThemeData light() {
     final base = ThemeData.light();
     return base.copyWith(
@@ -150,7 +86,48 @@ class GatherTheme {
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
-      // cardTheme intentionally omitted to keep compatibility with ThemeData APIs
+    );
+  }
+
+  static ThemeData dark() {
+    final base = ThemeData.dark();
+    return base.copyWith(
+      primaryColor: GatherColors.primary,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: base.colorScheme.copyWith(
+        primary: GatherColors.primary,
+        surface: const Color(0xFF1E1E1E),
+        error: GatherColors.error,
+        onPrimary: GatherColors.white,
+      ),
+      textTheme: _buildDarkTextTheme(base.textTheme),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1E1E1E),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A2A2A)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: GatherColors.primary),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          foregroundColor: GatherColors.white,
+          backgroundColor: GatherColors.primary,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
     );
   }
 
@@ -173,6 +150,29 @@ class GatherTheme {
       bodyMedium: base.bodyMedium?.copyWith(
         fontFamily: 'Poppins',
         color: GatherColors.textSecondary,
+      ),
+    );
+  }
+
+  static TextTheme _buildDarkTextTheme(TextTheme base) {
+    return base.copyWith(
+      headlineLarge: base.headlineLarge?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      titleLarge: base.titleLarge?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: base.bodyLarge?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.white,
+      ),
+      bodyMedium: base.bodyMedium?.copyWith(
+        fontFamily: 'Poppins',
+        color: GatherColors.withOpacity(GatherColors.textSecondary, 0.85),
       ),
     );
   }

@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 import '../../widgets/greeting_header.dart';
+import '../../services/organizer_service.dart';
+import '../../../screens/admin/organizer_review_screen.dart';
+import '../events/create_event_screen.dart';
+import '../events/event_list_screen.dart';
+import '../organizer/organizer_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,8 +48,74 @@ class _HomeScreenState extends State<HomeScreen>
     );
 
     _ctrl.forward();
-  }
+    // Listen for role changes to detect when the user becomes an organizer
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      FirebaseFirestore.instance.collection('users').doc(uid).snapshots().listen((snap) async {
+        final role = snap.data()?['role'] as String?;
+        if (role == 'organizer' && mounted) {
+          if (!_promptedBecomeOrganizer) {
+            _promptedBecomeOrganizer = true;
+            // Auto-navigate: if profile exists, go to CreateEventScreen; otherwise go to OrganizerProfileScreen
+            bool hasProfile = false;
+            try {
+              final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+              final data = userDoc.data();
+              if (data != null && (data['displayName'] != null || data['organizationName'] != null)) {
+                hasProfile = true;
+              }
+            } catch (_) {}
 
+            if (!hasProfile && mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OrganizerProfileScreen()),
+              );
+            } else if (mounted) {
+              String? initialTitle;
+              try {
+                final q = await FirebaseFirestore.instance
+                    .collection('organizer_requests')
+                    .where('uid', isEqualTo: uid)
+                    .where('status', isEqualTo: 'approved')
+                    .orderBy('submittedAt', descending: true)
+                    .limit(1)
+                    .get();
+                if (q.docs.isNotEmpty) initialTitle = q.docs.first.data()['organizationName'] as String?;
+              } catch (_) {}
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => CreateEventScreen(initialTitle: initialTitle)),
+              );
+            }
+          }
+        }
+      });
+    }
+
+
+  bool _promptedBecomeOrganizer = false;
+  
+  Future<void> _setUserRole(String role) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not signed in')));
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({'role': role}, SetOptions(merge: true));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Role set to $role')));
+      if (role == 'organizer' && mounted) {
+        _promptedBecomeOrganizer = false;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const OrganizerProfileScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
   @override
   void dispose() {
     _ctrl.dispose();
@@ -98,7 +172,75 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('GatherUni'), actions: const []),
+      appBar: AppBar(
+        title: const Text('GatherUni'),
+        actions: [
+          if (kDebugMode)
+            IconButton(
+              icon: const Icon(Icons.bug_report),
+              tooltip: 'Dev: Role helper',
+              onPressed: () async {
+                showDialog<void>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Dev: Role Helper'),
+                    content: const Text('Set or revert the current user role for testing.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          Navigator.of(ctx).pop();
+                          await _setUserRole('user');
+                        },
+                        child: const Text('Revert to user'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          Navigator.of(ctx).pop();
+                          await _setUserRole('organizer');
+                        },
+                        child: const Text('Set organizer'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          IconButton(
+            icon: const Icon(Icons.list),
+            tooltip: 'Events',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EventListScreen()),
+              );
+            },
+          ),
+          FutureBuilder<bool>(
+            future: OrganizerService.isAdmin(),
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done)
+                return const SizedBox.shrink();
+              if (snap.data != true) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.admin_panel_settings),
+                tooltip: 'Admin panel',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const OrganizerReviewScreen(),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           FadeTransition(
@@ -119,6 +261,25 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ],
+      ),
+      floatingActionButton: FutureBuilder<bool>(
+        future: OrganizerService.isOrganizer(),
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) return const SizedBox.shrink();
+          if (snap.data != true) return const SizedBox.shrink();
+          return FloatingActionButton(
+            child: const Icon(Icons.add),
+            tooltip: 'Create Event',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CreateEventScreen(),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
