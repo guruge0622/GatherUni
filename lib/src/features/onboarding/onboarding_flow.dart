@@ -65,7 +65,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   List<String> interests = [];
 
   Future<void> _saveProfile() async {
-    final uid = FirebaseService.instance.currentUser?.uid;
+    final user = FirebaseService.instance.currentUser;
+    final uid = user?.uid;
     if (uid == null) return;
     final data = {
       'name': name,
@@ -76,7 +77,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       'interests': interests,
       'createdAt': DateTime.now().toIso8601String(),
     };
-    await FirebaseService.instance.setUserProfile(uid, data);
+    // If the current user is signed in anonymously, skip attempting to
+    // write the profile to Firestore to avoid permission errors when
+    // Firestore rules disallow anonymous writes to `users/{uid}`.
+    if (user != null && user.isAnonymous) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Profile saved locally. Sign in to persist your profile to cloud.',
+          ),
+        ),
+      );
+    } else {
+      await FirebaseService.instance.setUserProfile(uid, data);
+    }
     if (!mounted) return;
     Navigator.of(context).pushReplacementNamed('/home');
   }
