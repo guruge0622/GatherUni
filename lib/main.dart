@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'dart:async';
 import 'firebase_options.dart';
 import 'src/shared.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
@@ -99,7 +100,25 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: currentIndex, children: pages),
+      body: Stack(
+        children: [
+          IndexedStack(index: currentIndex, children: pages),
+          // Debug overlay: shows current auth UID and whether the user is anonymous.
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              color: Colors.black87,
+              child: Text(
+                'UID: ${FirebaseAuth.instance.currentUser?.uid ?? "-"}\n'
+                'Anonymous: ${FirebaseAuth.instance.currentUser?.isAnonymous ?? false}',
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) => setState(() => currentIndex = index),
