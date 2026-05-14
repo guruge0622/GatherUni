@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../src/shared.dart';
 import '../src/theme/design_system.dart';
 import '../src/backend/firebase_service.dart';
+import 'package:qr_flutter/qr_flutter.dart' as qrf;
+import 'dart:convert';
+
+enum PaymentMethod { card, qr }
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -12,6 +16,7 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   bool _loading = false;
+  PaymentMethod _method = PaymentMethod.card;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +86,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
           const SizedBox(height: 16),
+          // Payment method selector
+          Row(
+            children: [
+              ChoiceChip(
+                label: const Text('Card'),
+                selected: _method == PaymentMethod.card,
+                onSelected: (_) => setState(() => _method = PaymentMethod.card),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: const Text('QR'),
+                selected: _method == PaymentMethod.qr,
+                onSelected: (_) => setState(() => _method = PaymentMethod.qr),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -88,42 +110,64 @@ class _PaymentScreenState extends State<PaymentScreen> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: const Color(0xFFE6ECF6)),
             ),
-            child: const Column(
-              children: [
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Card number',
-                    prefixIcon: Icon(Icons.credit_card_rounded),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(labelText: 'MM/YY'),
-                        keyboardType: TextInputType.datetime,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(labelText: 'CVC'),
+            child: _method == PaymentMethod.card
+                ? const Column(
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Card number',
+                          prefixIcon: Icon(Icons.credit_card_rounded),
+                        ),
                         keyboardType: TextInputType.number,
                       ),
+                      SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              decoration: InputDecoration(labelText: 'MM/YY'),
+                              keyboardType: TextInputType.datetime,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              decoration: InputDecoration(labelText: 'CVC'),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Name on card',
+                          prefixIcon: Icon(Icons.person_outline_rounded),
+                        ),
+                      ),
+                    ],
+                  )
+                : // QR view
+                  Center(
+                    child: Column(
+                      children: [
+                        const Text('Scan this QR to pay'),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: 180,
+                          height: 180,
+                          color: Colors.white,
+                          child: qrf.QrImage(
+                            data: _buildQrData(event, count, total),
+                            version: qrf.QrVersions.auto,
+                            gapless: false,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(_buildQrData(event, count, total)),
+                      ],
                     ),
-                  ],
-                ),
-                SizedBox(height: 12),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Name on card',
-                    prefixIcon: Icon(Icons.person_outline_rounded),
                   ),
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: 18),
           SizedBox(
@@ -151,6 +195,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               eventId: event.id,
                               userId: user.uid,
                             );
+                        final qrData = _method == PaymentMethod.qr
+                            ? _buildQrData(event, count, total)
+                            : null;
                         if (!mounted) return;
                         Navigator.of(context).pushReplacementNamed(
                           '/booking-confirmation',
@@ -159,6 +206,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             'event': event,
                             'quantity': count,
                             'total': total,
+                            if (qrData != null) 'qrData': qrData,
                           },
                         );
                       } catch (e) {
@@ -191,5 +239,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ],
       ),
     );
+  }
+
+  String _buildQrData(Event? event, int count, num total) {
+    final payload = {
+      'type': 'gatheruni_payment',
+      'eventId': event?.id,
+      'title': event?.title,
+      'quantity': count,
+      'total': total,
+      'ts': DateTime.now().toIso8601String(),
+    };
+    return jsonEncode(payload);
   }
 }

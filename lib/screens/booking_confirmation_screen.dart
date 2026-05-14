@@ -3,6 +3,7 @@ import 'package:add_2_calendar/add_2_calendar.dart' as add2;
 import 'package:intl/intl.dart';
 import '../src/theme/design_system.dart';
 import '../src/shared.dart' as app_shared;
+import 'package:qr_flutter/qr_flutter.dart' as qrf;
 
 class BookingConfirmationScreen extends StatefulWidget {
   const BookingConfirmationScreen({super.key});
@@ -110,7 +111,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       const SizedBox.shrink(),
                     const SizedBox(height: 20),
 
-                    // QR card
+                    // QR card (shows QR if qrData provided)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(18),
@@ -128,12 +129,18 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey.shade200),
                             ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.qr_code_2_outlined,
-                                size: 110,
-                                color: Colors.black54,
-                              ),
+                            child: Center(
+                              child: args != null && args['qrData'] != null
+                                  ? qrf.QrImage(
+                                      data: args['qrData'] as String,
+                                      version: qrf.QrVersions.auto,
+                                      size: 150,
+                                    )
+                                  : const Icon(
+                                      Icons.qr_code_2_outlined,
+                                      size: 110,
+                                      color: Colors.black54,
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 12),
